@@ -33,12 +33,13 @@ import openpyxl
 from recompute_metrics import recompute
 
 # ============================== CONFIG ==============================
-XLSX_PATH = r"C:\Users\chen\OneDrive\ytm_computed.xlsx"
-DASHBOARD_PATH = r"C:\Users\chen\OneDrive\ytm_dashboard.html"
+_REPO_DIR = pathlib.Path(__file__).parent
+XLSX_PATH = str(_REPO_DIR / "ytm_computed.xlsx")
+DASHBOARD_PATH = str(_REPO_DIR / "docs" / "ytm_dashboard.html")
 
-DOWNLOADS_DIR = pathlib.Path(__file__).parent / "downloads"
-LOG_PATH = pathlib.Path(__file__).parent / "run_log.txt"
-BUILD_DASHBOARD_SCRIPT = pathlib.Path(__file__).parent / "build_dashboard.py"
+DOWNLOADS_DIR = _REPO_DIR / "downloads"
+LOG_PATH = _REPO_DIR / "run_log.txt"
+BUILD_DASHBOARD_SCRIPT = _REPO_DIR / "build_dashboard.py"
 # ======================================================================
 
 
