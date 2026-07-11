@@ -1,0 +1,45 @@
+name: TASE YTM Update
+
+on:
+  schedule:
+    # ⚠️ זמנים ב-UTC. ישראל היא UTC+3 בקיץ (שעון קיץ) ו-UTC+2 בחורף.
+    # הערכים כאן מכוונים ל-10:30 ו-14:30 שעון ישראל בקיץ (IDT, UTC+3).
+    # בחורף (בערך סוף אוקטובר - סוף מרץ) זה ירוץ בפועל ב-11:30 ו-15:30
+    # שעון ישראל, אלא אם תעדכני את השעות ל-8,12 בחורף.
+    # ריצה בימי המסחר בבורסה בלבד: ראשון-חמישי (0=ראשון, 4=חמישי).
+    - cron: "30 7 * * 0-4"
+    - cron: "30 11 * * 0-4"
+  workflow_dispatch: {}   # מאפשר גם הרצה ידנית מתוך טאב Actions בגיטהאב
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests openpyxl python-dateutil scipy tzdata
+
+      - name: Run daily update
+        run: python run_daily_update.py
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "tase-bot"
+          git config user.email "tase-bot@users.noreply.github.com"
+          git add ytm_computed.xlsx docs/ytm_dashboard.html
+          if git diff --cached --quiet; then
+            echo "אין שינויים לשמור."
+          else
+            git commit -m "עדכון אוטומטי: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            git push
+          fi
