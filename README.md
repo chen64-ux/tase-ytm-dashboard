@@ -65,3 +65,5 @@ python download_tase_data_playwright.py
   ני"ע - זה כן ישים.
 - **`corporate-bonds-cpi`** לא קשור לנתוני מסחר בכלל (הוא מושך מדד מחירים
   לצרכן מהלמ"ס) - הקובץ הזה לא רלוונטי אליו.
+
+   
