@@ -309,6 +309,59 @@ def read_non_conv_bonds(csv_path):
     return out
 
 
+def read_warrants(csv_path):
+    """
+    קורא כתבי אופציה מתוך קובץ ה-CSV הגולמי שמורד מהבורסה. מחזיר רשימת
+    dict-ים: sec_id, name, price, strike_base, strike_current,
+    strike_linkage, last_exercise_date, ratio, stock_name, stock_price.
+    כל השדות זמינים ישירות ב-CSV - אין צורך במעקב ידני, בדיוק כמו
+    read_non_conv_bonds.
+    """
+    import csv as csv_module
+
+    WARRANT_TYPE = "כתבי אופציה"
+    COL_NAME, COL_SEC_ID, COL_TYPE, COL_PRICE = 0, 2, 3, 4
+    COL_STRIKE_BASE, COL_STRIKE_CURRENT, COL_STRIKE_LINKAGE = 39, 40, 41
+    COL_LAST_EXERCISE_DATE, COL_RATIO, COL_STOCK_NAME, COL_STOCK_PRICE = 42, 43, 44, 45
+    DATA_START = 3
+
+    def to_float(s):
+        s = (s or "").strip()
+        if not s:
+            return None
+        try:
+            return float(s)
+        except ValueError:
+            return None
+
+    with open(csv_path, encoding="utf-8-sig") as f:
+        rows = list(csv_module.reader(f))
+
+    out = []
+    for row in rows[DATA_START:]:
+        if len(row) <= COL_STOCK_PRICE:
+            continue
+        if row[COL_TYPE].strip() != WARRANT_TYPE:
+            continue
+        sec_id = row[COL_SEC_ID].strip()
+        name = row[COL_NAME].strip()
+        if not sec_id or not name:
+            continue
+        out.append({
+            "sec_id": sec_id,
+            "name": name,
+            "price": to_float(row[COL_PRICE]),
+            "strike_base": to_float(row[COL_STRIKE_BASE]),
+            "strike_current": to_float(row[COL_STRIKE_CURRENT]),
+            "strike_linkage": row[COL_STRIKE_LINKAGE].strip() or None,
+            "last_exercise_date": row[COL_LAST_EXERCISE_DATE].strip() or None,
+            "ratio": to_float(row[COL_RATIO]),
+            "stock_name": row[COL_STOCK_NAME].strip() or None,
+            "stock_price": to_float(row[COL_STOCK_PRICE]),
+        })
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("xlsx_path")
@@ -376,6 +429,15 @@ def main():
             new_html, count=1, flags=re.S,
         )
         print(f"✅ עודכנו {len(non_conv)} אג\"ח שאינן ניתנות להמרה (טאב נפרד).")
+
+        warrants = read_warrants(args.nonconv_csv)
+        warrants_json = json.dumps(warrants, ensure_ascii=False)
+        new_html = re.sub(
+            r"const WARRANTS = \[.*?\];",
+            f"const WARRANTS = {warrants_json};",
+            new_html, count=1, flags=re.S,
+        )
+        print(f"✅ עודכנו {len(warrants)} כתבי אופציה (טאב נפרד).")
     else:
         print("⚠️  לא סופק --nonconv-csv - טבלת האג\"ח שאינן ניתנות להמרה לא עודכנה.", file=sys.stderr)
 
