@@ -46,6 +46,12 @@ DASHBOARD_PATH = str(_REPO_DIR / "docs" / "ytm_dashboard.html")
 DOWNLOADS_DIR = _REPO_DIR / "downloads"
 LOG_PATH = _REPO_DIR / "run_log.txt"
 BUILD_DASHBOARD_SCRIPT = _REPO_DIR / "build_dashboard.py"
+# קובץ ייצוא תיק ני"ע מהברוקר - לא מתעדכן אוטומטית, יש להחליף אותו ידנית
+# ב-repo (אותו שם קובץ בדיוק) בכל פעם שהתיק משתנה משמעותית.
+HOLDINGS_XLSX_PATH = _REPO_DIR / "holdings.xlsx"
+# נתוני מכפילים (רווח/הון) מדוח "מבט עומק" תקופתי - לעדכן ידנית אחרי
+# כל דוח כספי חדש (ראה ההערה בתוך הקובץ עצמו).
+STOCK_FUNDAMENTALS_PATH = _REPO_DIR / "stock_fundamentals.json"
 # ======================================================================
 
 
@@ -281,6 +287,12 @@ def build_dashboard(xlsx_path, dashboard_path, csv_path, usd_rate, usd_date, gov
         cmd += ["--usd-rate", str(usd_rate), "--usd-date", usd_date]
     if gov_curve is not None:
         cmd += ["--gov-curve", json.dumps(gov_curve)]
+    if HOLDINGS_XLSX_PATH.exists():
+        cmd += ["--holdings-xlsx", str(HOLDINGS_XLSX_PATH)]
+    else:
+        log(f"ℹ️  לא נמצא {HOLDINGS_XLSX_PATH.name} - לשוניות תיק ההחזקות לא יעודכנו.", log_file)
+    if STOCK_FUNDAMENTALS_PATH.exists():
+        cmd += ["--stock-fundamentals", str(STOCK_FUNDAMENTALS_PATH)]
 
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"

@@ -20,6 +20,8 @@ from pathlib import Path
 import openpyxl
 import requests
 
+from parse_holdings import parse_holdings
+
 # 0-based column indices (A=0, B=1, ... AC=28, AY=50, etc.)
 COL = {
     "name": 0,          # A  שם
@@ -362,6 +364,41 @@ def read_warrants(csv_path):
     return out
 
 
+def read_stock_prices(csv_path):
+    """מחזיר dict: sec_id -> מחיר אחרון (אגורות), עבור כל המניות בקובץ ה-CSV היומי."""
+    import csv as csv_module
+
+    COL_SEC_ID, COL_TYPE, COL_PRICE = 2, 3, 4
+    DATA_START = 3
+
+    with open(csv_path, encoding="utf-8-sig") as f:
+        rows = list(csv_module.reader(f))
+
+    out = {}
+    for row in rows[DATA_START:]:
+        if len(row) <= COL_PRICE:
+            continue
+        if row[COL_TYPE].strip() != "מניות":
+            continue
+        sec_id = row[COL_SEC_ID].strip()
+        price_s = row[COL_PRICE].strip()
+        if not sec_id or not price_s:
+            continue
+        try:
+            out[sec_id] = float(price_s)
+        except ValueError:
+            continue
+    return out
+
+
+def read_stock_fundamentals(json_path):
+    """קורא את קובץ נתוני היסוד (מכפילים) שנשמר מדוח 'מבט עומק' תקופתי."""
+    with open(json_path, encoding="utf-8") as f:
+        data = json.load(f)
+    data.pop("_meta", None)
+    return data
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("xlsx_path")
@@ -373,6 +410,10 @@ def main():
                      help='עקום תשואות ממשלתי כ-JSON, לדוגמה \'[{"t":0.25,"y":3.42},{"t":1,"y":3.32}]\'')
     ap.add_argument("--nonconv-csv", default=None,
                      help="נתיב לקובץ ה-CSV הגולמי מהבורסה (לעדכון טבלת אג\"ח שאינן ניתנות להמרה)")
+    ap.add_argument("--holdings-xlsx", default=None,
+                     help="נתיב לקובץ ייצוא תיק ני\"ע מהברוקר (לעדכון לשוניות ההחזקות)")
+    ap.add_argument("--stock-fundamentals", default=None,
+                     help="נתיב ל-stock_fundamentals.json (מכפילי רווח/הון בסיסיים לגלגול יומי)")
     ap.add_argument("--out", default=None, help="נתיב לקובץ הפלט")
     args = ap.parse_args()
 
@@ -440,6 +481,36 @@ def main():
         print(f"✅ עודכנו {len(warrants)} כתבי אופציה (טאב נפרד).")
     else:
         print("⚠️  לא סופק --nonconv-csv - טבלת האג\"ח שאינן ניתנות להמרה לא עודכנה.", file=sys.stderr)
+
+    if args.holdings_xlsx:
+        holdings = parse_holdings(args.holdings_xlsx)
+        bonds_holdings = holdings.get(("ניע ישראלים", "אג״ח"), []) or holdings.get(("ניע ישראלים", 'אג"ח'), [])
+        stocks_holdings = holdings.get(("ניע ישראלים", "מניות"), []) + holdings.get(("ניע זרים", "מניות"), [])
+
+        bonds_json = json.dumps(bonds_holdings, ensure_ascii=False)
+        new_html = re.sub(r"const HOLDINGS_BONDS = \[.*?\];", f"const HOLDINGS_BONDS = {bonds_json};",
+                           new_html, count=1, flags=re.S)
+        stocks_json = json.dumps(stocks_holdings, ensure_ascii=False)
+        new_html = re.sub(r"const HOLDINGS_STOCKS = \[.*?\];", f"const HOLDINGS_STOCKS = {stocks_json};",
+                           new_html, count=1, flags=re.S)
+        print(f"✅ עודכן תיק החזקות: {len(bonds_holdings)} אג\"ח, {len(stocks_holdings)} מניות.")
+
+        if args.stock_fundamentals:
+            fundamentals = read_stock_fundamentals(args.stock_fundamentals)
+            fundamentals_json = json.dumps(fundamentals, ensure_ascii=False)
+            new_html = re.sub(r"const STOCK_FUNDAMENTALS = \{.*?\};",
+                               f"const STOCK_FUNDAMENTALS = {fundamentals_json};",
+                               new_html, count=1, flags=re.S)
+            print(f"✅ נטענו נתוני יסוד (מכפילים) עבור {len(fundamentals)} מניות.")
+        else:
+            print("⚠️  לא סופק --stock-fundamentals - מכפילי הרווח/הון בתיק ההחזקות לא יעודכנו.", file=sys.stderr)
+
+        if args.nonconv_csv:
+            stock_prices = read_stock_prices(args.nonconv_csv)
+            prices_json = json.dumps(stock_prices, ensure_ascii=False)
+            new_html = re.sub(r"const STOCK_PRICES = \{.*?\};", f"const STOCK_PRICES = {prices_json};",
+                               new_html, count=1, flags=re.S)
+            print(f"✅ עודכנו מחירי {len(stock_prices)} מניות (לגלגול מכפילים).")
 
     out_path = Path(args.out) if args.out else Path("ytm_dashboard.html")
     out_path.write_text(new_html, encoding="utf-8")
