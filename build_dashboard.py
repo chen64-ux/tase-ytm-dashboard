@@ -392,6 +392,33 @@ def read_stock_prices(csv_path):
     return out
 
 
+def read_stock_market_caps(csv_path):
+    """מחזיר dict: sec_id -> שווי שוק (אלפי ש"ח), ישירות מעמודה 19 בקובץ ה-CSV היומי."""
+    import csv as csv_module
+
+    COL_SEC_ID, COL_TYPE, COL_MCAP = 2, 3, 19
+    DATA_START = 3
+
+    with open(csv_path, encoding="utf-8-sig") as f:
+        rows = list(csv_module.reader(f))
+
+    out = {}
+    for row in rows[DATA_START:]:
+        if len(row) <= COL_MCAP:
+            continue
+        if row[COL_TYPE].strip() != "מניות":
+            continue
+        sec_id = row[COL_SEC_ID].strip()
+        mcap_s = row[COL_MCAP].strip()
+        if not sec_id or not mcap_s:
+            continue
+        try:
+            out[sec_id] = float(mcap_s)
+        except ValueError:
+            continue
+    return out
+
+
 def read_stock_fundamentals(json_path):
     """קורא את קובץ נתוני היסוד (מכפילים) שנשמר מדוח 'מבט עומק' תקופתי."""
     with open(json_path, encoding="utf-8") as f:
@@ -530,24 +557,32 @@ def main():
                                new_html, count=1, flags=re.S)
             print(f"✅ עודכנו מחירי {len(stock_prices)} מניות (לגלגול מכפילים).")
 
+            holdings_mcaps = read_stock_market_caps(args.nonconv_csv)
+            mcaps_json = json.dumps(holdings_mcaps, ensure_ascii=False)
+            new_html = re.sub(r"const STOCK_MARKET_CAPS = \{.*?\};", f"const STOCK_MARKET_CAPS = {mcaps_json};",
+                               new_html, count=1, flags=re.S)
+
     # טאב "כל מניות הבורסה" - עצמאי, לא תלוי בקובץ ההחזקות. דורש --nonconv-csv
     # (למחירים עדכניים) ו---market-pe-snapshot (תמונת מצב רבעונית ממביזפורטל).
     if args.nonconv_csv and args.market_pe_snapshot:
         all_prices = read_stock_prices(args.nonconv_csv)
+        all_mcaps = read_stock_market_caps(args.nonconv_csv)
         market_base = read_market_pe_snapshot(args.market_pe_snapshot)
         all_stocks = []
         for sec_id, base in market_base.items():
             cur_price = all_prices.get(sec_id)
             base_price = base.get("price_base")
             pe_base = base.get("pe_base")
-            pe_rolled = None
-            if isinstance(pe_base, (int, float)) and base_price and cur_price is not None:
-                pe_rolled = pe_base * (cur_price / base_price)
+            roll_factor = None
+            if base_price and cur_price is not None:
+                roll_factor = cur_price / base_price
+            pe_rolled = pe_base * roll_factor if (isinstance(pe_base, (int, float)) and roll_factor is not None) else None
             all_stocks.append({
                 "sec_id": sec_id,
                 "name": base.get("name"),
                 "price": cur_price if cur_price is not None else base_price,
                 "pe": pe_rolled if pe_rolled is not None else (pe_base if pe_base == "הפסד" else None),
+                "market_cap": all_mcaps.get(sec_id),  # ישירות מה-CSV היומי - מדויק, לא מגולגל
             })
         all_stocks_json = json.dumps(all_stocks, ensure_ascii=False)
         new_html = re.sub(r"const ALL_STOCKS = \[.*?\];", f"const ALL_STOCKS = {all_stocks_json};",
