@@ -21,6 +21,7 @@ import openpyxl
 import requests
 
 from parse_holdings import parse_holdings
+from fetch_pe import fetch_pe_for_securities
 
 # 0-based column indices (A=0, B=1, ... AC=28, AY=50, etc.)
 COL = {
@@ -495,15 +496,22 @@ def main():
                            new_html, count=1, flags=re.S)
         print(f"✅ עודכן תיק החזקות: {len(bonds_holdings)} אג\"ח, {len(stocks_holdings)} מניות.")
 
+        israeli_stock_ids = [s["sec_id"] for s in stocks_holdings if s.get("currency") == "₪" and s.get("sec_id")]
+        if israeli_stock_ids:
+            stock_pe_live = fetch_pe_for_securities(israeli_stock_ids, log_func=print)
+            pe_json = json.dumps(stock_pe_live, ensure_ascii=False)
+            new_html = re.sub(r"const STOCK_PE_LIVE = \{.*?\};", f"const STOCK_PE_LIVE = {pe_json};",
+                               new_html, count=1, flags=re.S)
+
         if args.stock_fundamentals:
             fundamentals = read_stock_fundamentals(args.stock_fundamentals)
             fundamentals_json = json.dumps(fundamentals, ensure_ascii=False)
             new_html = re.sub(r"const STOCK_FUNDAMENTALS = \{.*?\};",
                                f"const STOCK_FUNDAMENTALS = {fundamentals_json};",
                                new_html, count=1, flags=re.S)
-            print(f"✅ נטענו נתוני יסוד (מכפילים) עבור {len(fundamentals)} מניות.")
+            print(f"✅ נטענו נתוני יסוד (סקטור/שווי שוק) עבור {len(fundamentals)} מניות.")
         else:
-            print("⚠️  לא סופק --stock-fundamentals - מכפילי הרווח/הון בתיק ההחזקות לא יעודכנו.", file=sys.stderr)
+            print("⚠️  לא סופק --stock-fundamentals - סקטור/שווי שוק בתיק ההחזקות לא יעודכנו.", file=sys.stderr)
 
         if args.nonconv_csv:
             stock_prices = read_stock_prices(args.nonconv_csv)
