@@ -22,6 +22,7 @@ import requests
 
 from parse_holdings import parse_holdings
 from fetch_pe import fetch_pe_for_securities
+from fetch_bonds import fetch_bizportal_bonds
 
 # 0-based column indices (A=0, B=1, ... AC=28, AY=50, etc.)
 COL = {
@@ -508,6 +509,14 @@ def main():
             new_html, count=1, flags=re.S,
         )
         print(f"✅ עודכנו {len(non_conv)} אג\"ח שאינן ניתנות להמרה (טאב נפרד).")
+
+        bizportal_bonds = fetch_bizportal_bonds(log_func=print)
+        bizportal_json = json.dumps(bizportal_bonds, ensure_ascii=False)
+        new_html = re.sub(
+            r"const BIZPORTAL_BONDS = \{.*?\};",
+            f"const BIZPORTAL_BONDS = {bizportal_json};",
+            new_html, count=1, flags=re.S,
+        )
 
         warrants = read_warrants(args.nonconv_csv)
         warrants_json = json.dumps(warrants, ensure_ascii=False)
