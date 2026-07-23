@@ -400,6 +400,14 @@ def read_stock_fundamentals(json_path):
     return data
 
 
+def read_market_pe_snapshot(json_path):
+    """קורא את תמונת המצב הרבעונית (מכפיל בסיס לכל השוק)."""
+    with open(json_path, encoding="utf-8") as f:
+        data = json.load(f)
+    data.pop("_meta", None)
+    return data
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("xlsx_path")
@@ -415,6 +423,8 @@ def main():
                      help="נתיב לקובץ ייצוא תיק ני\"ע מהברוקר (לעדכון לשוניות ההחזקות)")
     ap.add_argument("--stock-fundamentals", default=None,
                      help="נתיב ל-stock_fundamentals.json (מכפילי רווח/הון בסיסיים לגלגול יומי)")
+    ap.add_argument("--market-pe-snapshot", default=None,
+                     help="נתיב ל-market_pe_base.json (תמונת מצב רבעונית של מכפיל רווח לכל השוק, לטאב 'כל מניות הבורסה')")
     ap.add_argument("--out", default=None, help="נתיב לקובץ הפלט")
     args = ap.parse_args()
 
@@ -519,6 +529,38 @@ def main():
             new_html = re.sub(r"const STOCK_PRICES = \{.*?\};", f"const STOCK_PRICES = {prices_json};",
                                new_html, count=1, flags=re.S)
             print(f"✅ עודכנו מחירי {len(stock_prices)} מניות (לגלגול מכפילים).")
+
+    # טאב "כל מניות הבורסה" - עצמאי, לא תלוי בקובץ ההחזקות. דורש --nonconv-csv
+    # (למחירים עדכניים) ו---market-pe-snapshot (תמונת מצב רבעונית ממביזפורטל).
+    if args.nonconv_csv and args.market_pe_snapshot:
+        all_prices = read_stock_prices(args.nonconv_csv)
+        market_base = read_market_pe_snapshot(args.market_pe_snapshot)
+        all_stocks = []
+        for sec_id, base in market_base.items():
+            cur_price = all_prices.get(sec_id)
+            base_price = base.get("price_base")
+            pe_base = base.get("pe_base")
+            pe_rolled = None
+            if isinstance(pe_base, (int, float)) and base_price and cur_price is not None:
+                pe_rolled = pe_base * (cur_price / base_price)
+            all_stocks.append({
+                "sec_id": sec_id,
+                "name": base.get("name"),
+                "price": cur_price if cur_price is not None else base_price,
+                "pe": pe_rolled if pe_rolled is not None else (pe_base if pe_base == "הפסד" else None),
+            })
+        all_stocks_json = json.dumps(all_stocks, ensure_ascii=False)
+        new_html = re.sub(r"const ALL_STOCKS = \[.*?\];", f"const ALL_STOCKS = {all_stocks_json};",
+                           new_html, count=1, flags=re.S)
+        snapshot_date = None
+        with open(args.market_pe_snapshot, encoding="utf-8") as f:
+            snapshot_date = json.load(f).get("_meta", {}).get("snapshot_date")
+        new_html = re.sub(r'const MARKET_PE_SNAPSHOT_DATE = ".*?";',
+                           f'const MARKET_PE_SNAPSHOT_DATE = "{snapshot_date or ""}";',
+                           new_html, count=1)
+        print(f"✅ עודכן טאב 'כל מניות הבורסה': {len(all_stocks)} מניות (תמונת מצב מ-{snapshot_date}).")
+    elif args.market_pe_snapshot:
+        print("⚠️  סופק --market-pe-snapshot אבל לא --nonconv-csv - טאב 'כל מניות הבורסה' לא עודכן.", file=sys.stderr)
 
     out_path = Path(args.out) if args.out else Path("ytm_dashboard.html")
     out_path.write_text(new_html, encoding="utf-8")

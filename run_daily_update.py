@@ -52,6 +52,10 @@ HOLDINGS_XLSX_PATH = _REPO_DIR / "holdings.xlsx"
 # נתוני מכפילים (רווח/הון) מדוח "מבט עומק" תקופתי - לעדכן ידנית אחרי
 # כל דוח כספי חדש (ראה ההערה בתוך הקובץ עצמו).
 STOCK_FUNDAMENTALS_PATH = _REPO_DIR / "stock_fundamentals.json"
+# תמונת מצב רבעונית של מכפיל רווח לכל מניות הבורסה (לטאב "כל מניות
+# הבורסה") - נוצר ע"י הרצה ידנית של fetch_market_pe_snapshot.py, לא
+# חלק מהריצה היומית. לרענן כל רבעון בערך.
+MARKET_PE_SNAPSHOT_PATH = _REPO_DIR / "market_pe_base.json"
 # ======================================================================
 
 
@@ -293,6 +297,10 @@ def build_dashboard(xlsx_path, dashboard_path, csv_path, usd_rate, usd_date, gov
         log(f"ℹ️  לא נמצא {HOLDINGS_XLSX_PATH.name} - לשוניות תיק ההחזקות לא יעודכנו.", log_file)
     if STOCK_FUNDAMENTALS_PATH.exists():
         cmd += ["--stock-fundamentals", str(STOCK_FUNDAMENTALS_PATH)]
+    if MARKET_PE_SNAPSHOT_PATH.exists():
+        cmd += ["--market-pe-snapshot", str(MARKET_PE_SNAPSHOT_PATH)]
+    else:
+        log(f"ℹ️  לא נמצא {MARKET_PE_SNAPSHOT_PATH.name} - טאב 'כל מניות הבורסה' לא יעודכן.", log_file)
 
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
