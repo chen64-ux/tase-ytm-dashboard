@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "snapshot_date": "24/07/2026 16:04",
+    "snapshot_date": "24/07/2026 16:47",
     "source": "bizportal.co.il",
     "note": "מכפיל בסיס לכל מניות הבורסה. יש לרענן קובץ זה מחדש (הרצה ידנית) כל רבעון בערך."
   },
@@ -1612,12 +1612,6 @@
     "pe_quarterly_base": null,
     "price_base": 148.7
   },
-  "1157403": {
-    "name": "ישראכרט",
-    "pe_base": "הפסד",
-    "pe_quarterly_base": null,
-    "price_base": 1152.0
-  },
   "434019": {
     "name": "ישראל קנדה",
     "pe_base": "הפסד",
@@ -2649,6 +2643,12 @@
     "pe_base": 165.42,
     "pe_quarterly_base": null,
     "price_base": 7230.0
+  },
+  "1095819": {
+    "name": "פריון נטוורק",
+    "pe_base": "הפסד",
+    "pe_quarterly_base": null,
+    "price_base": 2806.0
   },
   "328013": {
     "name": "פריורטק",
