@@ -582,18 +582,15 @@ def main():
             cur_price = all_prices.get(sec_id)
             base_price = base.get("price_base")
             pe_base = base.get("pe_base")
-            pe_q_base = base.get("pe_quarterly_base")
             roll_factor = None
             if base_price and cur_price is not None:
                 roll_factor = cur_price / base_price
             pe_rolled = pe_base * roll_factor if (isinstance(pe_base, (int, float)) and roll_factor is not None) else None
-            pe_q_rolled = pe_q_base * roll_factor if (isinstance(pe_q_base, (int, float)) and roll_factor is not None) else None
             all_stocks.append({
                 "sec_id": sec_id,
                 "name": base.get("name"),
                 "price": cur_price if cur_price is not None else base_price,
                 "pe": pe_rolled if pe_rolled is not None else (pe_base if pe_base == "הפסד" else None),
-                "pe_quarterly": pe_q_rolled if pe_q_rolled is not None else (pe_q_base if pe_q_base == "הפסד" else None),
                 "market_cap": all_mcaps.get(sec_id),  # ישירות מה-CSV היומי - מדויק, לא מגולגל
             })
         all_stocks_json = json.dumps(all_stocks, ensure_ascii=False)
