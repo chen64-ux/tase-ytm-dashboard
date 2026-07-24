@@ -18,7 +18,7 @@ import json
 import sys
 from datetime import datetime
 
-from fetch_pe import fetch_pe_single, DELAY_SECONDS
+from fetch_pe import fetch_pe_full, DELAY_SECONDS
 import time
 
 
@@ -58,14 +58,15 @@ def main():
     snapshot = {}
     ok, failed = 0, 0
     for i, (sec_id, info) in enumerate(stocks.items()):
-        pe, err = fetch_pe_single(sec_id)
-        if err:
+        r = fetch_pe_full(sec_id)
+        if r["error"] and r["pe_ttm"] is None:
             failed += 1
         else:
             ok += 1
             snapshot[sec_id] = {
                 "name": info["name"],
-                "pe_base": pe,
+                "pe_base": r["pe_ttm"],
+                "pe_quarterly_base": r["pe_quarterly"],
                 "price_base": info["price"],
             }
         if (i + 1) % 25 == 0:
