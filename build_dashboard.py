@@ -436,6 +436,14 @@ def read_market_pe_snapshot(json_path):
     return data
 
 
+def read_index_tiers(json_path):
+    """קורא את מיפוי sec_id -> {name, tier, sector} (ת"א 35/90/יתר 60 + ענף)."""
+    with open(json_path, encoding="utf-8") as f:
+        data = json.load(f)
+    data.pop("_meta", None)
+    return data
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("xlsx_path")
@@ -453,6 +461,8 @@ def main():
                      help="נתיב ל-stock_fundamentals.json (מכפילי רווח/הון בסיסיים לגלגול יומי)")
     ap.add_argument("--market-pe-snapshot", default=None,
                      help="נתיב ל-market_pe_base.json (תמונת מצב רבעונית של מכפיל רווח לכל השוק, לטאב 'כל מניות הבורסה')")
+    ap.add_argument("--index-tiers", default=None,
+                     help="נתיב ל-index_tiers.json (מיפוי sec_id -> ת\"א 35/90/יתר 60, לסינון/מיון בטאב 'כל מניות הבורסה')")
     ap.add_argument("--out", default=None, help="נתיב לקובץ הפלט")
     args = ap.parse_args()
 
@@ -577,6 +587,7 @@ def main():
         all_prices = read_stock_prices(args.nonconv_csv)
         all_mcaps = read_stock_market_caps(args.nonconv_csv)
         market_base = read_market_pe_snapshot(args.market_pe_snapshot)
+        index_tiers = read_index_tiers(args.index_tiers) if args.index_tiers else {}
         all_stocks = []
         for sec_id, base in market_base.items():
             cur_price = all_prices.get(sec_id)
@@ -586,12 +597,15 @@ def main():
             if base_price and cur_price is not None:
                 roll_factor = cur_price / base_price
             pe_rolled = pe_base * roll_factor if (isinstance(pe_base, (int, float)) and roll_factor is not None) else None
+            tier_info = index_tiers.get(sec_id)
             all_stocks.append({
                 "sec_id": sec_id,
                 "name": base.get("name"),
                 "price": cur_price if cur_price is not None else base_price,
                 "pe": pe_rolled if pe_rolled is not None else (pe_base if pe_base == "הפסד" else None),
                 "market_cap": all_mcaps.get(sec_id),  # ישירות מה-CSV היומי - מדויק, לא מגולגל
+                "tier": tier_info["tier"] if tier_info else "שאר המניות",
+                "sector": tier_info["sector"] if tier_info else None,
             })
         all_stocks_json = json.dumps(all_stocks, ensure_ascii=False)
         new_html = re.sub(r"const ALL_STOCKS = \[.*?\];", f"const ALL_STOCKS = {all_stocks_json};",
