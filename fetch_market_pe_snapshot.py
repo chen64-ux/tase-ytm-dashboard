@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 fetch_market_pe_snapshot.py
-שולף מכפיל רווח ותשואת דיבידנד (12 חודשים אחרונים) מביזפורטל עבור
-**כל** המניות הנסחרות בבורסה (לפי קובץ ה-CSV היומי), ושומר "תמונת
-מצב" ל-market_pe_base.json - כולל המחיר בזמן השליפה, כדי שהתהליך
-היומי יוכל לגלגל את שני הנתונים קדימה לפי שינוי מחיר, בלי לשלוף
-מחדש כל יום.
+שולף מכפיל רווח (12 חודשים אחרונים) מביזפורטל עבור **כל** המניות
+הנסחרות בבורסה (לפי קובץ ה-CSV היומי), ושומר "תמונת מצב" ל-
+market_pe_base.json - כולל המחיר בזמן השליפה, כדי שהתהליך היומי
+יוכל לגלגל את המכפיל קדימה לפי שינוי מחיר, בלי לשלוף מחדש כל יום.
 
 *** להריץ ידנית, פעם ברבעון (או אחרי דוחות כספיים) - לא חלק מהריצה
-    היומית האוטומטית! שתי בקשות למניה (מכפיל + דיבידנד, עמודים
-    שונים) - עם 500+ מניות זה לוקח כ-20-30 דקות. ***
+    היומית האוטומטית! עם 500+ מניות זה לוקח כ-10-15 דקות. ***
 
 שימוש:
     python3 fetch_market_pe_snapshot.py <path_to_securitiesmarketdata.csv>
@@ -20,7 +18,7 @@ import json
 import sys
 from datetime import datetime
 
-from fetch_pe import fetch_pe_single, fetch_dividend_yield, DELAY_SECONDS
+from fetch_pe import fetch_pe_single, DELAY_SECONDS
 import time
 
 
@@ -55,14 +53,12 @@ def main():
         sys.exit(1)
 
     stocks = read_all_stocks(sys.argv[1])
-    print(f"נמצאו {len(stocks)} מניות בקובץ. מתחיל שליפה (זה ייקח כ-{len(stocks)*2} שניות)...")
+    print(f"נמצאו {len(stocks)} מניות בקובץ. מתחיל שליפה (זה ייקח כ-{len(stocks)} שניות)...")
 
     snapshot = {}
     ok, failed = 0, 0
     for i, (sec_id, info) in enumerate(stocks.items()):
         pe, err = fetch_pe_single(sec_id)
-        time.sleep(DELAY_SECONDS)
-        div_yield, div_err = fetch_dividend_yield(sec_id)
         if err:
             failed += 1
         else:
@@ -70,7 +66,6 @@ def main():
             snapshot[sec_id] = {
                 "name": info["name"],
                 "pe_base": pe,
-                "div_yield_base": div_yield,
                 "price_base": info["price"],
             }
         if (i + 1) % 25 == 0:
@@ -82,7 +77,7 @@ def main():
         "_meta": {
             "snapshot_date": datetime.now().strftime("%d/%m/%Y %H:%M"),
             "source": "bizportal.co.il",
-            "note": "מכפיל רווח ותשואת דיבידנד בסיסיים לכל מניות הבורסה. יש לרענן קובץ זה מחדש (הרצה ידנית) כל רבעון בערך.",
+            "note": "מכפיל בסיס לכל מניות הבורסה. יש לרענן קובץ זה מחדש (הרצה ידנית) כל רבעון בערך.",
         }
     }
     out.update(snapshot)
