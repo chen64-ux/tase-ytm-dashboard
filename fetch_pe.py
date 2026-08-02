@@ -61,24 +61,72 @@ def fetch_pe_single(sec_id: str):
     return float(val), None
 
 
+def fetch_dividend_yield(sec_id: str):
+    """
+    שולפת את תשואת הדיבידנד מעמוד "דיבידנדים" של המניה (עמוד נפרד
+    מזה של המכפיל - בקשה נוספת). מחזירה (yield_pct, error):
+    yield_pct הוא float (אחוזים), None אם אין דיבידנד/נכשל.
+    error הוא None בהצלחה (גם אם התשואה עצמה None כי אין דיבידנד -
+    זה לא כישלון), אחרת תיאור קצר.
+
+    העוגן לחיפוש הוא regex שמתיר תג HTML או רווח בין "תשואת" ל"דיבידנד"
+    (לא רק את שתי המילים כמחרוזת רציפה) - כי בעמודים אחרים של ביזפורטל
+    כבר ראינו שתי מילים סמוכות שמפוצלות לשני אלמנטים נפרדים עם תג
+    ביניהן, מה שהיה שובר חיפוש מחרוזת רגיל.
+    """
+    url = f"https://www.bizportal.co.il/capitalmarket/quote/dividends/{sec_id}"
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=15)
+    except requests.RequestException as e:
+        return None, f"שגיאת רשת: {e}"
+
+    if resp.status_code != 200:
+        return None, f"status={resp.status_code}"
+
+    text = resp.text
+    anchor = re.search(r"תשואת(?:\s|<[^>]*>)*דיבידנד", text)
+    if not anchor:
+        return None, "לא נמצא 'תשואת דיבידנד' בעמוד"
+
+    window = text[anchor.end():anchor.end() + 300]
+    clean = re.sub(r"<[^>]+>", " ", window)
+    clean = re.sub(r"&[a-zA-Z#0-9]+;", " ", clean)
+
+    m = re.search(r"(-?[\d,]+\.?\d*|--)", clean)
+    if not m:
+        return None, "לא נמצא מספר בקטע"
+    val = m.group(1)
+    if val == "--":
+        return None, None  # אין דיבידנד ידוע - לא שגיאה, רק אין נתון
+    try:
+        return float(val.replace(",", "")), None
+    except ValueError:
+        return None, "ערך לא תקין"
+
+
 def fetch_pe_for_securities(sec_ids, log_func=print):
     """
     sec_ids: רשימת מספרי ני"ע (מחרוזות).
-    מחזיר dict: sec_id -> מכפיל רווח (float, "הפסד", או None אם נכשל).
+    מחזיר dict: sec_id -> {"pe": .., "div_yield": ..}
+    pe: float, "הפסד", או None. div_yield: float (אחוזים) או None.
     לא זורק חריגה על כישלון בודד - ממשיך לשאר המניות ומדווח בלוג.
+    שתי בקשות נפרדות למניה (מכפיל + דיבידנד - עמודים שונים בביזפורטל).
     """
     results = {}
     for i, sec_id in enumerate(sec_ids):
         pe, err = fetch_pe_single(sec_id)
         if err:
             log_func(f"  ⚠️  מכפיל רווח - נייר {sec_id}: {err}")
-            results[sec_id] = None
-        else:
-            results[sec_id] = pe
+        time.sleep(DELAY_SECONDS)
+        div_yield, div_err = fetch_dividend_yield(sec_id)
+        if div_err:
+            log_func(f"  ⚠️  תשואת דיבידנד - נייר {sec_id}: {div_err}")
+        results[sec_id] = {"pe": pe, "div_yield": div_yield}
         if i < len(sec_ids) - 1:
             time.sleep(DELAY_SECONDS)
-    ok = sum(1 for v in results.values() if v is not None)
-    log_func(f"✅ נשלף מכפיל רווח עבור {ok}/{len(sec_ids)} מניות (ביזפורטל).")
+    ok = sum(1 for v in results.values() if v["pe"] is not None)
+    ok_div = sum(1 for v in results.values() if v["div_yield"] is not None)
+    log_func(f"✅ נשלף מכפיל רווח עבור {ok}/{len(sec_ids)} מניות, תשואת דיבידנד עבור {ok_div}/{len(sec_ids)} (ביזפורטל).")
     return results
 
 
@@ -86,5 +134,5 @@ if __name__ == "__main__":
     import sys
     ids = sys.argv[1:] or ["126011"]
     r = fetch_pe_for_securities(ids)
-    for sid, pe in r.items():
-        print(sid, "->", pe)
+    for sid, v in r.items():
+        print(sid, "->", v)
