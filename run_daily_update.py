@@ -56,6 +56,10 @@ STOCK_FUNDAMENTALS_PATH = _REPO_DIR / "stock_fundamentals.json"
 # הבורסה") - נוצר ע"י הרצה ידנית של fetch_market_pe_snapshot.py, לא
 # חלק מהריצה היומית. לרענן כל רבעון בערך.
 MARKET_PE_SNAPSHOT_PATH = _REPO_DIR / "market_pe_base.json"
+# מיפוי sec_id -> מדד (ת"א 35/90/יתר 60) וענף, לטאב "כל מניות הבורסה" -
+# נוצר ע"י הרצה ידנית של fetch_index_composition.py, לא חלק מהריצה
+# היומית. לרענן כל רבעון בערך.
+INDEX_TIERS_PATH = _REPO_DIR / "index_tiers.json"
 # ======================================================================
 
 
@@ -301,6 +305,10 @@ def build_dashboard(xlsx_path, dashboard_path, csv_path, usd_rate, usd_date, gov
         cmd += ["--market-pe-snapshot", str(MARKET_PE_SNAPSHOT_PATH)]
     else:
         log(f"ℹ️  לא נמצא {MARKET_PE_SNAPSHOT_PATH.name} - טאב 'כל מניות הבורסה' לא יעודכן.", log_file)
+    if INDEX_TIERS_PATH.exists():
+        cmd += ["--index-tiers", str(INDEX_TIERS_PATH)]
+    else:
+        log(f"ℹ️  לא נמצא {INDEX_TIERS_PATH.name} - שיוך מדד/ענף בטאב 'כל מניות הבורסה' לא יעודכן.", log_file)
 
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
