@@ -2072,7 +2072,28 @@ document.getElementById('holdings-file-input-2').addEventListener('change', (e) 
 // נבנה מ-ALL_STOCKS, שכבר מגיע מוזרק מ-build_dashboard.py עם המכפיל
 // מגולגל מראש (תמונת מצב רבעונית × שינוי מחיר יומי) - אין חישוב
 // נוסף פה, רק תצוגה/סינון/מיון.
-document.getElementById('snapshot-date-as').textContent = MARKET_PE_SNAPSHOT_DATE || 'לא זמין';
+// בדיקת גיל תמונת המצב: אם עברו יותר מ-100 יום (בערך רבעון) מאז
+// ההרצה הידנית האחרונה של fetch_market_pe_snapshot.py, מציגים אזהרה
+// ויזואלית - כי המכפילים עלולים לא לשקף דוחות כספיים חדשים שהתפרסמו
+// מאז (השדה מתגלגל יומית לפי שינוי מחיר בלבד, לא לפי דוחות חדשים).
+const SNAPSHOT_STALE_DAYS = 100;
+function parseSnapshotDate(s) {
+  if (!s) return null;
+  const m = s.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if (!m) return null;
+  return new Date(+m[3], +m[2] - 1, +m[1]);
+}
+const snapshotDateEl = document.getElementById('snapshot-date-as');
+snapshotDateEl.textContent = MARKET_PE_SNAPSHOT_DATE || 'לא זמין';
+const snapshotDateObj = parseSnapshotDate(MARKET_PE_SNAPSHOT_DATE);
+if (snapshotDateObj) {
+  const ageDays = Math.floor((new Date() - snapshotDateObj) / (1000 * 60 * 60 * 24));
+  if (ageDays > SNAPSHOT_STALE_DAYS) {
+    snapshotDateEl.parentElement.innerHTML += ` <span class="warn" style="font-weight:600" title="עברו ${ageDays} ימים מאז ריצת fetch_market_pe_snapshot.py האחרונה - מומלץ להריץ מחדש כדי לשקף דוחות כספיים חדשים שהתפרסמו מאז">⚠ תמונת המצב ישנה (${ageDays} ימים) - מומלץ לרענן</span>`;
+  }
+} else if (MARKET_PE_SNAPSHOT_DATE) {
+  snapshotDateEl.parentElement.innerHTML += ` <span class="warn" title="לא הצלחתי לפענח את התאריך לצורך בדיקת עדכניות">⚠</span>`;
+}
 
 let sortColAs = 'sec_id', sortDirAs = 1, filteredAs = [];
 
