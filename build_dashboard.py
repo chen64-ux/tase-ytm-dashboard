@@ -444,6 +444,12 @@ def read_index_tiers(json_path):
     return data
 
 
+def read_sector_mapping(json_path):
+    """קורא את הסיווג הענפי הידני (sector_mapping.json, מ-convert_sector_mapping.py)."""
+    with open(json_path, encoding="utf-8") as f:
+        return json.load(f)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("xlsx_path")
@@ -463,6 +469,12 @@ def main():
                      help="נתיב ל-market_pe_base.json (תמונת מצב רבעונית של מכפיל רווח לכל השוק, לטאב 'כל מניות הבורסה')")
     ap.add_argument("--index-tiers", default=None,
                      help="נתיב ל-index_tiers.json (מיפוי sec_id -> ת\"א 35/90/יתר 60, לסינון/מיון בטאב 'כל מניות הבורסה')")
+    ap.add_argument("--index125-weights", default=None,
+                     help='משקל כל מניה במדד ת"א-125 כ-JSON, נשלף חי בכל ריצה (fetch_index_weights.py), '
+                          'לדוגמה \'{"373019":{"name":"אאורה","weight_pct":0.19}}\'')
+    ap.add_argument("--sector-mapping", default=None,
+                     help="נתיב ל-sector_mapping.json (סיווג ענפי ידני, מ-convert_sector_mapping.py) - "
+                          "גובר על הענף האוטומטי מ-index-tiers כשקיים, לגרפי הפילוח הענפי")
     ap.add_argument("--out", default=None, help="נתיב לקובץ הפלט")
     args = ap.parse_args()
 
@@ -588,6 +600,8 @@ def main():
         all_mcaps = read_stock_market_caps(args.nonconv_csv)
         market_base = read_market_pe_snapshot(args.market_pe_snapshot)
         index_tiers = read_index_tiers(args.index_tiers) if args.index_tiers else {}
+        index125_weights = json.loads(args.index125_weights) if args.index125_weights else {}
+        sector_mapping = read_sector_mapping(args.sector_mapping) if args.sector_mapping else {}
         all_stocks = []
         for sec_id, base in market_base.items():
             cur_price = all_prices.get(sec_id)
@@ -598,6 +612,8 @@ def main():
                 roll_factor = cur_price / base_price
             pe_rolled = pe_base * roll_factor if (isinstance(pe_base, (int, float)) and roll_factor is not None) else None
             tier_info = index_tiers.get(sec_id)
+            manual_sector = sector_mapping.get(sec_id)
+            weight_info = index125_weights.get(sec_id)
             all_stocks.append({
                 "sec_id": sec_id,
                 "name": base.get("name"),
@@ -605,7 +621,11 @@ def main():
                 "pe": pe_rolled if pe_rolled is not None else (pe_base if pe_base == "הפסד" else None),
                 "market_cap": all_mcaps.get(sec_id),  # ישירות מה-CSV היומי - מדויק, לא מגולגל
                 "tier": tier_info["tier"] if tier_info else "שאר המניות",
-                "sector": tier_info["sector"] if tier_info else None,
+                # הענף הידני (sector_mapping.json) גובר כשקיים - זה סיווג
+                # מבוסס ת"א-125 שהמשתמש מגדיר בעצמו; נופל חזרה לענף
+                # האוטומטי (ממדדי הענף של ביזפורטל) כשאין התאמה ידנית.
+                "sector": (manual_sector["sector"] if manual_sector else None) or (tier_info["sector"] if tier_info else None),
+                "weight_125": weight_info["weight_pct"] if weight_info else None,
             })
         all_stocks_json = json.dumps(all_stocks, ensure_ascii=False)
         new_html = re.sub(r"const ALL_STOCKS = \[.*?\];", f"const ALL_STOCKS = {all_stocks_json};",

@@ -35,6 +35,7 @@ import openpyxl
 
 from recompute_metrics import recompute
 from add_new_convertible_bonds import add_new_bonds
+from fetch_index_weights import fetch_index125_weights
 
 # ============================== CONFIG ==============================
 # נתיבים יחסיים לתיקיית הריפו - כך שאותו סקריפט עובד גם ב-GitHub Actions
@@ -60,6 +61,10 @@ MARKET_PE_SNAPSHOT_PATH = _REPO_DIR / "market_pe_base.json"
 # נוצר ע"י הרצה ידנית של fetch_index_composition.py, לא חלק מהריצה
 # היומית. לרענן כל רבעון בערך.
 INDEX_TIERS_PATH = _REPO_DIR / "index_tiers.json"
+# סיווג ענפי ידני לפי ת"א-125 (מ-convert_sector_mapping.py) - לגרפי
+# הפילוח הענפי בטאב "כל מניות הבורסה". גובר על הענף האוטומטי כשקיים.
+# לא חלק מהריצה היומית - לרענן ולהעלות מחדש כשהסיווג הידני משתנה.
+SECTOR_MAPPING_PATH = _REPO_DIR / "sector_mapping.json"
 # ======================================================================
 
 
@@ -277,7 +282,7 @@ def build_gov_curve(csv_path: pathlib.Path, log_file):
         return None
 
 
-def build_dashboard(xlsx_path, dashboard_path, csv_path, usd_rate, usd_date, gov_curve, log_file):
+def build_dashboard(xlsx_path, dashboard_path, csv_path, usd_rate, usd_date, gov_curve, index125_weights, log_file):
     log("בונה מחדש את ytm_dashboard.html...", log_file)
     if not BUILD_DASHBOARD_SCRIPT.exists():
         log(f"❌ לא נמצא build_dashboard.py בנתיב: {BUILD_DASHBOARD_SCRIPT}", log_file)
@@ -309,6 +314,12 @@ def build_dashboard(xlsx_path, dashboard_path, csv_path, usd_rate, usd_date, gov
         cmd += ["--index-tiers", str(INDEX_TIERS_PATH)]
     else:
         log(f"ℹ️  לא נמצא {INDEX_TIERS_PATH.name} - שיוך מדד/ענף בטאב 'כל מניות הבורסה' לא יעודכן.", log_file)
+    if index125_weights:
+        cmd += ["--index125-weights", json.dumps(index125_weights)]
+    if SECTOR_MAPPING_PATH.exists():
+        cmd += ["--sector-mapping", str(SECTOR_MAPPING_PATH)]
+    else:
+        log(f"ℹ️  לא נמצא {SECTOR_MAPPING_PATH.name} - גרפי הפילוח הענפי (ת\"א-125) ישתמשו בסיווג האוטומטי בלבד.", log_file)
 
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"
@@ -383,7 +394,8 @@ def main():
             recalculate_metrics(xlsx_path, log_file)
             usd_rate, usd_date = fetch_usd_rate(log_file)
             gov_curve = build_gov_curve(csv_path, log_file)
-            build_dashboard(xlsx_path, dashboard_path, csv_path, usd_rate, usd_date, gov_curve, log_file)
+            index125_weights = fetch_index125_weights(log_func=lambda msg: log(msg, log_file))
+            build_dashboard(xlsx_path, dashboard_path, csv_path, usd_rate, usd_date, gov_curve, index125_weights, log_file)
             stamp_last_updated(dashboard_path, log_file)
             log("--- ריצה הסתיימה בהצלחה (כולל דולר, עקום ודשבורד) ---", log_file)
         except Exception as e:
