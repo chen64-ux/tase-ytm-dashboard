@@ -61,24 +61,81 @@ def fetch_pe_single(sec_id: str):
     return float(val), None
 
 
+def fetch_pe_and_sector(sec_id: str):
+    """
+    שולפת מאותה בקשה (אותו עמוד generalview) גם את המכפיל וגם את הענף -
+    השדה "ענף" מופיע בעמוד כתווית בודדת (לא זוג-מילים, אז אין סיכון
+    לשבירה ע"י תג HTML באמצע, כמו שקרה עם "רבעון אחרון").
+
+    מחזירה dict: {"pe": .., "sector": .., "error": ..}
+    pe: float, "הפסד", או None. sector: מחרוזת או None.
+    """
+    url = f"https://www.bizportal.co.il/realestates/quote/generalview/{sec_id}"
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=15)
+    except requests.RequestException as e:
+        return {"pe": None, "sector": None, "error": f"שגיאת רשת: {e}"}
+
+    if resp.status_code != 200:
+        return {"pe": None, "sector": None, "error": f"status={resp.status_code}"}
+
+    text = resp.text
+    errors = []
+
+    idx = text.find("מכפיל רווח (12 חודשים אחרונים)")
+    if idx == -1:
+        idx = text.find("מכפיל רווח")
+    pe = None
+    if idx == -1:
+        errors.append("מכפיל: לא נמצא בעמוד")
+    else:
+        window = text[idx:idx + 400]
+        clean = re.sub(r"<[^>]+>", " ", window)
+        clean = re.sub(r"&[a-zA-Z#0-9]+;", " ", clean)
+        clean = clean.replace("מכפיל רווח (12 חודשים אחרונים)", "").replace("מכפיל רווח", "")
+        m = re.search(r"(-?\d+\.\d+|-?\d+|הפסד)", clean)
+        if not m:
+            errors.append("מכפיל: לא נמצא מספר בקטע")
+        else:
+            pe = m.group(1) if m.group(1) == "הפסד" else float(m.group(1))
+
+    sector = None
+    idx2 = text.find("ענף")
+    if idx2 == -1:
+        errors.append("ענף: לא נמצא בעמוד")
+    else:
+        window2 = text[idx2:idx2 + 300]
+        end_idx = window2.find("מטבע")
+        segment = window2[:end_idx] if end_idx != -1 else window2
+        clean2 = re.sub(r"<[^>]+>", " ", segment)
+        clean2 = re.sub(r"&[a-zA-Z#0-9]+;", " ", clean2)
+        clean2 = clean2.replace("ענף", "")
+        sector_val = re.sub(r"\s+", " ", clean2).strip()
+        sector = sector_val or None
+        if not sector:
+            errors.append("ענף: לא נמצא ערך")
+
+    return {"pe": pe, "sector": sector, "error": "; ".join(errors) or None}
+
+
 def fetch_pe_for_securities(sec_ids, log_func=print):
     """
     sec_ids: רשימת מספרי ני"ע (מחרוזות).
-    מחזיר dict: sec_id -> מכפיל רווח (float, "הפסד", או None אם נכשל).
+    מחזיר dict: sec_id -> {"pe": .., "sector": ..}
+    pe: float, "הפסד", או None. sector: מחרוזת או None.
     לא זורק חריגה על כישלון בודד - ממשיך לשאר המניות ומדווח בלוג.
     """
     results = {}
     for i, sec_id in enumerate(sec_ids):
-        pe, err = fetch_pe_single(sec_id)
-        if err:
-            log_func(f"  ⚠️  מכפיל רווח - נייר {sec_id}: {err}")
-            results[sec_id] = None
-        else:
-            results[sec_id] = pe
+        r = fetch_pe_and_sector(sec_id)
+        if r["error"]:
+            log_func(f"  ⚠️  נייר {sec_id}: {r['error']}")
+        results[sec_id] = {"pe": r["pe"], "sector": r["sector"]}
         if i < len(sec_ids) - 1:
             time.sleep(DELAY_SECONDS)
-    ok = sum(1 for v in results.values() if v is not None)
-    log_func(f"✅ נשלף מכפיל רווח עבור {ok}/{len(sec_ids)} מניות (ביזפורטל).")
+    ok = sum(1 for v in results.values() if v["pe"] is not None)
+    ok_sector = sum(1 for v in results.values() if v["sector"] is not None)
+    log_func(f"✅ נשלף מכפיל רווח עבור {ok}/{len(sec_ids)} מניות, ענף עבור {ok_sector}/{len(sec_ids)} (ביזפורטל).")
     return results
 
 
@@ -86,5 +143,5 @@ if __name__ == "__main__":
     import sys
     ids = sys.argv[1:] or ["126011"]
     r = fetch_pe_for_securities(ids)
-    for sid, pe in r.items():
-        print(sid, "->", pe)
+    for sid, v in r.items():
+        print(sid, "->", v)
