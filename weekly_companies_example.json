@@ -1,0 +1,42 @@
+[
+  {
+    "company": "Home Depot",
+    "ticker": "HD",
+    "market": "US",
+    "report_date": "2026-08-18",
+    "revenue": "41.77 מיליארד",
+    "eps_note": "הכה תחזיות (top+bottom)",
+    "yoy_note": "לא אותר % מדויק",
+    "pe_manual": 23.42
+  },
+  {
+    "company": "TJX",
+    "ticker": "TJX",
+    "market": "US",
+    "report_date": "2026-08-19",
+    "revenue": "14.32 מיליארד",
+    "eps_note": "סביב הקונצנזוס",
+    "yoy_note": "Marmaxx (ארה\"ב) חלש - miss נדיר",
+    "pe_manual": 26.02
+  },
+  {
+    "company": "ICL",
+    "sec_id": "281014",
+    "ticker": "ICL",
+    "market": "IL",
+    "report_date": "2026-08-19",
+    "revenue": "$2.1 מיליארד",
+    "profit_note": "137m$",
+    "yoy_note": "צמיחה משמעותית; השקת תוכנית התייעלות Elevate ($350M)"
+  },
+  {
+    "company": "בזק",
+    "sec_id": "230011",
+    "ticker": "BEZQ.TA",
+    "market": "IL",
+    "report_date": "2026-08-20",
+    "revenue": "2,165 מ' ₪",
+    "profit_note": "308 מ' ₪",
+    "yoy_note": "העלתה תחזית רווח נקי השוואתי 2026 ל-1.15-1.2 מיליארד ₪"
+  }
+]
