@@ -118,8 +118,11 @@ def fetch_yahoo_range(ticker, start_date, end_date):
 def fetch_yahoo_latest(ticker, as_of_date, scale=1.0):
     """
     מחזיר (value, error) - מחיר הסגירה האחרון הידוע ב-Yahoo עד ובכולל
-    as_of_date, מחולק ב-scale (Yahoo מציג תשואות אג"ח (^TNX/^TYX)
-    כערך ×10 - למשל 4.68% מוצג כ-46.8 - scale=10 מתקן את זה).
+    as_of_date, מחולק ב-scale אם צריך. הערה: ^TNX/^TYX (תשואות אג"ח
+    ממשל ארה"ב) מוחזרים ב-Yahoo *ישירות* כאחוז (4.68 = 4.68%), לא פי
+    10 כפי שהונח בטעות בגרסה קודמת - אומת מול נתון אמיתי מהדשבורד
+    (0.47%/0.53% שגויים -> 4.7%/5.3% נכונים). scale נשאר לשימוש עתידי
+    אם יתווסף מכשיר שכן דורש חלוקה.
     """
     start = date.fromordinal(as_of_date.toordinal() - 6)
     _, end_val, err = fetch_yahoo_range(ticker, start, as_of_date)
@@ -209,7 +212,7 @@ def fetch_fed_target_range(log):
 def build_yields_section(end_date, log):
     rows = []
     for name, ticker in YAHOO_YIELDS:
-        val, err = fetch_yahoo_latest(ticker, end_date, scale=10.0)
+        val, err = fetch_yahoo_latest(ticker, end_date, scale=1.0)
         if err:
             log(f"  ⚠️  {name} ({ticker}): {err}")
             rows.append([name, None, f"שגיאת שליפה: {err}"])
