@@ -65,6 +65,9 @@ INDEX_TIERS_PATH = _REPO_DIR / "index_tiers.json"
 # הפילוח הענפי בטאב "כל מניות הבורסה". גובר על הענף האוטומטי כשקיים.
 # לא חלק מהריצה היומית - לרענן ולהעלות מחדש כשהסיווג הידני משתנה.
 SECTOR_MAPPING_PATH = _REPO_DIR / "sector_mapping.json"
+# תוכן ידני ללשונית "סקירה שבועית" (מ-convert_weekly_review.py) - לא
+# נשלף אוטומטית, מעודכן ידנית מדי שבוע כשמתקבל קובץ סקירה חדש.
+WEEKLY_REVIEW_PATH = _REPO_DIR / "weekly_review.json"
 # ======================================================================
 
 
@@ -320,6 +323,10 @@ def build_dashboard(xlsx_path, dashboard_path, csv_path, usd_rate, usd_date, gov
         cmd += ["--sector-mapping", str(SECTOR_MAPPING_PATH)]
     else:
         log(f"ℹ️  לא נמצא {SECTOR_MAPPING_PATH.name} - גרפי הפילוח הענפי (ת\"א-125) ישתמשו בסיווג האוטומטי בלבד.", log_file)
+    if WEEKLY_REVIEW_PATH.exists():
+        cmd += ["--weekly-review", str(WEEKLY_REVIEW_PATH)]
+    else:
+        log(f"ℹ️  לא נמצא {WEEKLY_REVIEW_PATH.name} - לשונית 'סקירה שבועית' לא תעודכן.", log_file)
 
     env = os.environ.copy()
     env["PYTHONIOENCODING"] = "utf-8"

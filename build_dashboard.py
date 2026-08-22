@@ -450,6 +450,12 @@ def read_sector_mapping(json_path):
         return json.load(f)
 
 
+def read_weekly_review(json_path):
+    """קורא את נתוני הסקירה השבועית (weekly_review.json, מ-convert_weekly_review.py)."""
+    with open(json_path, encoding="utf-8") as f:
+        return json.load(f)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("xlsx_path")
@@ -475,6 +481,8 @@ def main():
     ap.add_argument("--sector-mapping", default=None,
                      help="נתיב ל-sector_mapping.json (סיווג ענפי ידני, מ-convert_sector_mapping.py) - "
                           "גובר על הענף האוטומטי מ-index-tiers כשקיים, לגרפי הפילוח הענפי")
+    ap.add_argument("--weekly-review", default=None,
+                     help="נתיב ל-weekly_review.json (מ-convert_weekly_review.py) - תוכן ידני ללשונית 'סקירה שבועית'")
     ap.add_argument("--out", default=None, help="נתיב לקובץ הפלט")
     args = ap.parse_args()
 
@@ -639,6 +647,13 @@ def main():
         print(f"✅ עודכן טאב 'כל מניות הבורסה': {len(all_stocks)} מניות (תמונת מצב מ-{snapshot_date}).")
     elif args.market_pe_snapshot:
         print("⚠️  סופק --market-pe-snapshot אבל לא --nonconv-csv - טאב 'כל מניות הבורסה' לא עודכן.", file=sys.stderr)
+
+    if args.weekly_review:
+        weekly_data = read_weekly_review(args.weekly_review)
+        weekly_json = json.dumps(weekly_data, ensure_ascii=False)
+        new_html = re.sub(r"const WEEKLY_REVIEW_DATA = .*?;", f"const WEEKLY_REVIEW_DATA = {weekly_json};",
+                           new_html, count=1, flags=re.S)
+        print(f"✅ עודכן טאב 'סקירה שבועית': {len(weekly_data.get('sections', []))} סעיפים.")
 
     out_path = Path(args.out) if args.out else Path("ytm_dashboard.html")
     out_path.write_text(new_html, encoding="utf-8")
