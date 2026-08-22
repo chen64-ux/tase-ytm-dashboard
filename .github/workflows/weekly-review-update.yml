@@ -1,0 +1,36 @@
+name: Weekly Review Update
+
+on:
+  schedule:
+    # 05:00 UTC = 08:00/07:00 שעון ישראל (בהתאם לשעון קיץ/חורף), יום שבת.
+    - cron: "0 5 * * 6"
+  workflow_dispatch: {}  # אפשר גם להריץ ידנית מתוך הטאב Actions בגיטהאב
+
+permissions:
+  contents: write
+
+jobs:
+  weekly-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install requests openpyxl python-dateutil scipy tzdata
+      - name: Run weekly review update
+        run: python run_weekly_review.py
+      - name: Commit and push changes
+        run: |
+          git config user.name "tase-bot"
+          git config user.email "tase-bot@users.noreply.github.com"
+          git add weekly_review.json docs/ytm_dashboard.html
+          if git diff --cached --quiet; then
+            echo "אין שינויים לשמור."
+          else
+            git commit -m "עדכון שבועי: $(date -u '+%Y-%m-%d')"
+            git push
+          fi
