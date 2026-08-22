@@ -651,8 +651,15 @@ def main():
     if args.weekly_review:
         weekly_data = read_weekly_review(args.weekly_review)
         weekly_json = json.dumps(weekly_data, ensure_ascii=False)
-        new_html = re.sub(r"const WEEKLY_REVIEW_DATA = .*?;", f"const WEEKLY_REVIEW_DATA = {weekly_json};",
-                           new_html, count=1, flags=re.S)
+        # json.dumps בלי indent מבטיח שורה בודדת (בלי ירידות שורה גולמיות
+        # בתוך המחרוזת - כל \n בתוכן כבר escaped כ-"\\n"). לכן חשוב:
+        # בלי re.S (כך ש-. לא חוצה שורות) וחמדן (.* לא .*?) - כדי לתפוס
+        # עד נקודה-הפסיק *האחרונה* בשורה (הסיום האמיתי של המשפט), לא
+        # הראשונה שנתקלים בה בתוך תוכן חופשי (הערות בעברית מכילות
+        # נקודה-פסיק, ואז regex עצלן היה "נחתך" באמצע ה-JSON ומשאיר
+        # שברי טקסט זבל שקורסים את כל ה-JavaScript בדף).
+        new_html = re.sub(r"const WEEKLY_REVIEW_DATA = .*;", f"const WEEKLY_REVIEW_DATA = {weekly_json};",
+                           new_html, count=1)
         print(f"✅ עודכן טאב 'סקירה שבועית': {len(weekly_data.get('sections', []))} סעיפים.")
 
     out_path = Path(args.out) if args.out else Path("ytm_dashboard.html")
