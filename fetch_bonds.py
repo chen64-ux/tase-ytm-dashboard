@@ -34,6 +34,42 @@ def _to_float(v):
         return None
 
 
+def _log_bizportal_block_diagnostics(resp, log_func):
+    """מדפיס פרטי אבחון ללוג כשהשליפה מביזפורטל נכשלת - כדי להבין אם
+    זו חסימת IP/ASN גורפת (למשל WAF שחוסם טווחי כתובות של ספקי ענן/CI
+    כמו GitHub Actions), אתגר JS/CDN (Cloudflare/Imperva וכו'), או משהו
+    אחר (עוגיות/User-Agent חסרים). לא משנה את ההתנהגות הרגילה - רק
+    מוסיף שורות אבחון ללוג, ורץ רק כשכבר יש כשלון.
+    """
+    try:
+        headers_of_interest = {
+            k: resp.headers.get(k)
+            for k in ("Server", "CF-RAY", "X-Iinfo", "X-CDN", "Via", "X-Cache")
+            if resp.headers.get(k)
+        }
+        snippet = re.sub(r"\s+", " ", resp.text[:300]).strip()
+        log_func(
+            f"    🔍 אבחון חסימה: headers רלוונטיים={headers_of_interest or '(אין)'}, "
+            f"תחילת גוף התשובה (300 תווים): {snippet!r}"
+        )
+    except Exception as e:
+        log_func(f"    🔍 אבחון חסימה נכשל: {e}")
+
+    try:
+        # ניסיון "חימום" cookies (בדומה למה שנדרש מול api.tase.co.il) -
+        # אם אחרי חימום מתקבל אותו status, זה מחזק שמדובר בחסימת
+        # IP/ASN גורפת ולא בבעיית עוגיות/session.
+        warm_session = requests.Session()
+        warm_session.get("https://www.bizportal.co.il/", headers=HEADERS, timeout=20)
+        retry = warm_session.get(BONDS_SEARCH_URL, headers=HEADERS, timeout=30)
+        log_func(
+            f"    🔍 אבחון חסימה: אחרי חימום cookies - status={retry.status_code} "
+            f"(אם זהה ל-status המקורי, כנראה חסימת IP/ASN גורפת ולא בעיית cookies/session)."
+        )
+    except requests.RequestException as e:
+        log_func(f"    🔍 ניסיון חימום ה-cookies לאבחון נכשל: {e}")
+
+
 def fetch_bizportal_bonds(log_func=print):
     """
     מחזיר dict: sec_id -> {name, price, ytm_gross, duration, spread}.
@@ -49,6 +85,7 @@ def fetch_bizportal_bonds(log_func=print):
 
     if resp.status_code != 200:
         log_func(f"⚠️  שליפת אג\"ח מביזפורטל נכשלה (status={resp.status_code}) - ישמש חישוב מקומי לכל האג\"ח.")
+        _log_bizportal_block_diagnostics(resp, log_func)
         return {}
 
     html = resp.text
