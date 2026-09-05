@@ -30,10 +30,16 @@ jobs:
         run: |
           git config user.name "tase-bot"
           git config user.email "tase-bot@users.noreply.github.com"
+          git config merge.ours.driver true
           git add ytm_computed.xlsx docs/ytm_dashboard.html
           if git diff --cached --quiet; then
             echo "אין שינויים לשמור."
           else
             git commit -m "עדכון אוטומטי: $(date -u '+%Y-%m-%d %H:%M UTC')"
-            git push
+            if ! git push; then
+              echo "push נדחה (כנראה נדחף שינוי מקומי באותו זמן) - מנסה fetch+merge..."
+              git fetch origin
+              git merge --no-edit origin/main
+              git push
+            fi
           fi
