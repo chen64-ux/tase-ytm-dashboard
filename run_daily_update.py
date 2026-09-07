@@ -11,7 +11,10 @@ Scheduler, שרת לינוקס, GitHub Actions, או אפילו Termux בטלפ�
 *** לפני הרצה ראשונה: לערוך את הגדרות ה-CONFIG למטה ***
 
 דרישות התקנה (חד פעמי):
-    pip install requests openpyxl python-dateutil scipy tzdata
+    pip install requests openpyxl python-dateutil tzdata
+    (scipy כבר לא נדרש - bond_math.py עבר למימוש brentq טהור-פייתון,
+    כדי לא להיות תלוי ב-C extension שיכול להיחסם ע"י Application
+    Control/Smart App Control של Windows - ראה ההערה בראש bond_math.py)
 
 קבצים נדרשים באותה תיקייה:
     bond_math.py, recompute_metrics.py, build_dashboard.py
