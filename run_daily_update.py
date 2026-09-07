@@ -28,6 +28,7 @@ import pathlib
 import re
 import subprocess
 import sys
+import time
 from zoneinfo import ZoneInfo
 
 import requests
@@ -375,11 +376,28 @@ def stamp_last_updated(dashboard_path: pathlib.Path, log_file):
     log(f"✅ נוספה חותמת 'עודכן לאחרונה: {stamp}' לדשבורד.", log_file)
 
 
+def _open_log_with_retry(path, attempts=5, delay_seconds=2.0):
+    """פותח את קובץ הלוג להוספה (append), עם ניסיונות חוזרים אם הקובץ
+    נעול זמנית (למשל אנטי-וירוס/OneDrive/ריצה קודמת שעדיין לא שחררה
+    את הקובץ). בלי זה, PermissionError חד-פעמי בפתיחת הלוג מפיל את
+    כל הריצה עוד לפני שנכתבת שורה אחת - וקרה בפועל (ראה run_log.txt).
+    """
+    last_error = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return open(path, "a", encoding="utf-8")
+        except (PermissionError, OSError) as e:
+            last_error = e
+            if attempt < attempts:
+                time.sleep(delay_seconds)
+    raise last_error
+
+
 def main():
     xlsx_path = pathlib.Path(XLSX_PATH)
     dashboard_path = pathlib.Path(DASHBOARD_PATH)
 
-    with open(LOG_PATH, "a", encoding="utf-8") as log_file:
+    with _open_log_with_retry(LOG_PATH) as log_file:
         log_file.write("\n" + "=" * 60 + "\n")
         log("--- תחילת ריצה ---", log_file)
 
