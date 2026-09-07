@@ -25,6 +25,7 @@ run_daily_local.py
 """
 
 import datetime
+import os
 import pathlib
 import subprocess
 import sys
@@ -143,6 +144,11 @@ def run_daily_update():
     # קרה בפועל ב-07/09/2026), ה-traceback האמיתי הולך ל-stderr של
     # תהליך שרץ בלי חלון קונסולה (Task Scheduler) - כלומר נעלם לגמרי,
     # ונשארת רק הודעת "קוד יציאה 1" הגנרית בלי שום מידע לאבחון.
+    # PYTHONIOENCODING: הגנה כפולה בנוסף ל-sys.stdout.reconfigure() שכבר
+    # קיים בתוך run_daily_update.py עצמו - קובעת את קידוד ברירת המחדל
+    # של ה-stdout/stderr של התהליך הבן עוד לפני שהוא בכלל מתחיל לרוץ.
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
     result = subprocess.run(
         [sys.executable, str(RUN_DAILY_UPDATE_SCRIPT)],
         cwd=str(_REPO_DIR),
@@ -150,6 +156,7 @@ def run_daily_update():
         text=True,
         encoding="utf-8",
         errors="replace",
+        env=env,
     )
     if result.returncode != 0:
         log_wrapper_event(

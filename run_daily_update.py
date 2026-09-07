@@ -34,6 +34,19 @@ import sys
 import time
 from zoneinfo import ZoneInfo
 
+# כש-stdout של התהליך הזה לא מחובר לקונסולה אמיתית (Task Scheduler בלי
+# חלון, או - כמו שקרה בפועל ב-07/09/2026 - כשההורה (run_daily_local.py)
+# מריץ אותנו עם capture_output=True, שהופך את ה-stdout שלנו ל-pipe),
+# פייתון בוחר קידוד ברירת מחדל לפי locale המערכת (cp1252 ב-Windows),
+# ו-print() עברית קורס עם UnicodeEncodeError - קרה בפועל, הפיל את כל
+# הריצה עוד לפני שנכתבה שורת לוג ראשונה (log() קורא ל-print() תמיד,
+# לא רק כותב לקובץ). מתקנים את זה כאן, בדיוק כמו ב-run_daily_local.py.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 import requests
 import openpyxl
 
