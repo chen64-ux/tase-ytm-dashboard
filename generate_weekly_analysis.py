@@ -58,6 +58,12 @@ PROMPT_TEMPLATE = """כתוב ניתוח שבועי אנליטי לשוק ההו
 4. notable_stocks_us - מניות וסקטורים בולטים בארה"ב השבוע, עם הסבר קצר לסיבה
 5. outlook_next_week - אירועים/נתונים כלכליים צפויים בשבוע הבא שכדאי לעקוב אחריהם
 
+כתוב טקסט חופשי רגיל בלבד - בלי שום תגיות ציטוט (כמו <cite> או (cite)
+או כל סימון דומה סביב עובדות שמקורן בחיפוש) ובלי סוגריים מרובעים של
+מספור הערות שוליים. אם רלוונטי, אפשר לציין את שם המקור במפורש בתוך
+המשפט עצמו (למשל "לפי דיווח ב-Yahoo Finance"), אבל לא בשום תחביר של
+תגית או קוד.
+
 השב אך ורק ב-JSON תקני בפורמט הבא, בלי שום טקסט, כותרת, משפט הקדמה
 (למשל "הנה הניתוח" או "עכשיו אכתוב את התשובה"), או ```json לפני/אחרי -
 התגובה שלך חייבת להתחיל ב-{{ ולהסתיים ב-}} ולא בשום תו אחר:
@@ -80,6 +86,20 @@ def extract_final_text(content_blocks):
     if not texts:
         raise RuntimeError("לא נמצא טקסט בתגובת ה-API")
     return "".join(texts)
+
+
+CITE_TAG_RE = re.compile(r"[<(]cite[^>]*>|</cite>", re.IGNORECASE)
+
+
+def strip_citation_markup(text):
+    """נצפה בפועל (15/09/2026) ש-Claude לפעמים 'מדליף' תגיות ציטוט
+    פסאודו-XML לתוך הטקסט החופשי עצמו - לפעמים אפילו בתחביר פגום, עם
+    סוגריים עגולים במקום סימן '<' (למשל: '(cite index="1-7">...טקסט
+    מצוטט...</cite>'). ציטוטים אמיתיים מה-API של Anthropic אמורים
+    להגיע כשדה JSON נפרד ומובנה, לא כטקסט חופשי בתוך התשובה - לכן
+    מסירים את התגיות (בשתי הצורות) אבל משאירים את הטקסט המצוטט עצמו,
+    כדי שהוא לא ייעלם מהניתוח."""
+    return CITE_TAG_RE.sub("", text)
 
 
 def parse_json_response(raw_text):
@@ -155,6 +175,10 @@ def generate(start_date: str, end_date: str) -> dict:
     missing = [k for k in required_keys if k not in result]
     if missing:
         raise RuntimeError(f"חסרים שדות בתשובת ה-API: {missing}")
+
+    for key in required_keys:
+        if isinstance(result.get(key), str):
+            result[key] = strip_citation_markup(result[key])
 
     return result
 
