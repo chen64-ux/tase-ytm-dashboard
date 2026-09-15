@@ -58,7 +58,9 @@ PROMPT_TEMPLATE = """כתוב ניתוח שבועי אנליטי לשוק ההו
 4. notable_stocks_us - מניות וסקטורים בולטים בארה"ב השבוע, עם הסבר קצר לסיבה
 5. outlook_next_week - אירועים/נתונים כלכליים צפויים בשבוע הבא שכדאי לעקוב אחריהם
 
-השב אך ורק ב-JSON תקני בפורמט הבא, בלי שום טקסט, כותרת, או ```json לפני/אחרי:
+השב אך ורק ב-JSON תקני בפורמט הבא, בלי שום טקסט, כותרת, משפט הקדמה
+(למשל "הנה הניתוח" או "עכשיו אכתוב את התשובה"), או ```json לפני/אחרי -
+התגובה שלך חייבת להתחיל ב-{{ ולהסתיים ב-}} ולא בשום תו אחר:
 {{"summary": "...", "past_week_events": "...", "notable_stocks_il": "...", "notable_stocks_us": "...", "outlook_next_week": "..."}}
 """
 
@@ -82,6 +84,18 @@ def extract_final_text(content_blocks):
 
 def parse_json_response(raw_text):
     cleaned = re.sub(r"^```json\s*|\s*```$", "", raw_text.strip())
+
+    # נצפה בפועל (15/09/2026, ריצה שלישית) שלמרות ההנחיה המפורשת בפרומפט,
+    # Claude לפעמים מוסיף משפט הקדמה לפני ה-JSON עצמו (למשל באנגלית:
+    # "Now I have comprehensive information... Let me compose the
+    # analysis." ואז מיד אחריו ה-JSON התקין). כדי לא להיות תלויים בציות
+    # מושלם להנחיה - שולפים את תת-המחרוזת שבין ה-'{' הראשון ל-'}' האחרון
+    # (מכסה גם הקדמה לפני וגם כל טקסט אחרי, אם יהיה).
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        cleaned = cleaned[start:end + 1]
+
     try:
         return json.loads(cleaned)
     except json.JSONDecodeError as e:
