@@ -117,7 +117,13 @@ def parse_json_response(raw_text):
         cleaned = cleaned[start:end + 1]
 
     try:
-        return json.loads(cleaned)
+        # strict=False: נצפה בפועל (15/09/2026, ריצה רביעית) ש-Claude
+        # לפעמים מכניס תו בקרה גולמי (control character - למשל ירידת
+        # שורה ממשית \n, לא ה-escape התקני \\n) בתוך ערך מחרוזת ב-JSON.
+        # לפי תקן ה-JSON זה לא חוקי (json.loads הרגיל דוחה את זה עם
+        # "Invalid control character"), אבל strict=False בפייתון סובלני
+        # לזה במפורש - בדיוק בשביל טקסט "כמעט-JSON" שנוצר ע"י מודל שפה.
+        return json.loads(cleaned, strict=False)
     except json.JSONDecodeError as e:
         # כדי שכשל עתידי יהיה ניתן לאבחון ישירות מהלוג (stdout/stderr
         # שנלכדים ע"י run_weekly_review.py) בלי צורך לחפור בממשק
