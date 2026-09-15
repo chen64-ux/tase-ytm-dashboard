@@ -483,6 +483,9 @@ tr.macro-group-header td{background:#131b2e;color:#58a6ff;font-weight:700;font-s
 
 <div id="page-weekly-review" class="page">
 <div style="padding:20px 28px 40px;overflow:auto;flex:1;min-height:0" id="weekly-review-scroll">
+  <div id="weekly-review-toolbar" style="display:none;justify-content:flex-end;margin-bottom:14px">
+    <button id="btn-export-weekly-word" style="background:#1f6feb;border:none;border-radius:7px;color:#fff;padding:8px 16px;cursor:pointer;font-size:.8rem;white-space:nowrap">⬇ הורדה ל-Word</button>
+  </div>
   <div id="weekly-review-content"></div>
   <div id="weekly-review-empty" style="display:none;text-align:center;padding:60px;color:#3d4f63">
     לא נמצא קובץ סקירה שבועית - יש להריץ convert_weekly_review.py על קובץ הסקירה, ולהעלות את weekly_review.json ל-repo.
@@ -2453,13 +2456,16 @@ function formatWeeklyCell(val, isPercentCol) {
 function renderWeeklyReview() {
   const container = document.getElementById('weekly-review-content');
   const empty = document.getElementById('weekly-review-empty');
+  const toolbar = document.getElementById('weekly-review-toolbar');
   if (!WEEKLY_REVIEW_DATA || !WEEKLY_REVIEW_DATA.sections || !WEEKLY_REVIEW_DATA.sections.length) {
     container.style.display = 'none';
     empty.style.display = 'block';
+    toolbar.style.display = 'none';
     return;
   }
   container.style.display = 'block';
   empty.style.display = 'none';
+  toolbar.style.display = 'flex';
 
   let html = '';
   if (WEEKLY_REVIEW_DATA.title) {
@@ -2515,6 +2521,94 @@ function renderWeeklyReview() {
   container.innerHTML = html;
 }
 renderWeeklyReview();
+
+// ===== הורדה ל-Word (טאב "סקירה שבועית") =====
+// בונה מסמך HTML עצמאי (כותרות/פסקאות/טבלאות, רקע בהיר להדפסה/עריכה
+// נוחה - לא הכהה של הדשבורד) עם ה-namespace המיוחד ש-Word מזהה
+// ('urn:schemas-microsoft-com:office:word') - טכניקה סטנדרטית לפתיחת
+// HTML כקובץ Word בלי שום ספריית JS נוספת (בניגוד ל-XLSX, שם באמת
+// צריך ספריית SheetJS כדי לייצר קובץ בינארי אמיתי). Word פותח ומעבד
+// את זה כמסמך לעריכה מלאה, כולל טבלאות.
+function buildWeeklyReviewWordHtml() {
+  const d = WEEKLY_REVIEW_DATA;
+  if (!d) return null;
+
+  let body = '';
+  if (d.title) body += `<h1>${d.title}</h1>`;
+  if (d.sources_note) body += `<div class="sources">${d.sources_note}</div>`;
+
+  if (d.analysis) {
+    const a = d.analysis;
+    const ANALYSIS_FIELDS = [
+      ['summary', 'תמצית מנהלים'],
+      ['past_week_events', 'אירועים ומגמות מרכזיות - השבוע שחלף'],
+      ['notable_stocks_il', 'מניות וסקטורים בולטים - ישראל'],
+      ['notable_stocks_us', 'מניות וסקטורים בולטים - ארה"ב'],
+      ['outlook_next_week', 'מבט קדימה לשבוע הבא'],
+    ];
+    body += `<div class="analysis-box"><h2>ניתוח אנליטי</h2>`;
+    ANALYSIS_FIELDS.forEach(([key, label]) => {
+      if (a[key]) {
+        body += `<h3>${label}</h3><p>${a[key]}</p>`;
+      }
+    });
+    body += `</div>`;
+  }
+
+  (d.sections || []).forEach(section => {
+    body += `<h2>${section.title}</h2>`;
+    if (section.headers && section.headers.length) {
+      body += `<table><thead><tr>` + section.headers.map(h => `<th>${h}</th>`).join('') + `</tr></thead><tbody>`;
+      body += section.rows.map(row => `<tr>` + section.headers.map((_, i) => {
+        const isPct = section.percent_cols && section.percent_cols.includes(i);
+        const cellVal = formatWeeklyCell(row[i], isPct);
+        return `<td>${cellVal || '-'}</td>`;
+      }).join('') + `</tr>`).join('');
+      body += `</tbody></table>`;
+    }
+    if (section.footnotes && section.footnotes.length) {
+      body += section.footnotes.map(f => `<div class="footnote">* ${f}</div>`).join('');
+    }
+  });
+
+  return `<!DOCTYPE html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset="utf-8">
+<title>${d.title || 'סקירה שבועית'}</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+  body{font-family:Arial,sans-serif;direction:rtl;text-align:right;color:#111;font-size:14px;line-height:1.6}
+  h1{font-size:20px;margin:0 0 4px}
+  .sources{color:#666;font-size:11px;margin-bottom:20px}
+  h2{color:#1f6feb;font-size:15px;margin:18px 0 6px}
+  h3{color:#1f6feb;font-size:13px;margin:14px 0 4px}
+  p{margin:0 0 10px}
+  table{border-collapse:collapse;width:100%;margin-bottom:8px}
+  th,td{border:1px solid #999;padding:5px 8px;font-size:12px;text-align:right}
+  th{background:#eee}
+  .footnote{color:#666;font-size:11px;font-style:italic;margin-top:4px}
+  .analysis-box{border:1px solid #ccc;padding:14px;margin-bottom:20px;background:#f7f9fb}
+</style>
+</head>
+<body dir="rtl">${body}</body>
+</html>`;
+}
+
+document.getElementById('btn-export-weekly-word').addEventListener('click', () => {
+  const html = buildWeeklyReviewWordHtml();
+  if (!html) return;
+  const blob = new Blob(['﻿', html], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const dateStr = new Date().toLocaleDateString('he-IL').replace(/\//g, '-');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `סקירה_שבועית_${dateStr}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+});
 
 // ===== קליק ימני על שורה - פתיחה בביזפורטל =====
 // מזהה אוטומטית האם השורה שייכת לטאב אג"ח או מניות (לפי הטאב הפעיל),
