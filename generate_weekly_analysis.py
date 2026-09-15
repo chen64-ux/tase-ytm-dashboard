@@ -152,11 +152,14 @@ def generate(start_date: str, end_date: str) -> dict:
         },
         json={
             "model": MODEL,
-            # 8000 ולא 4000 - בריצה הראשונה בפועל (15/09/2026) התגובה
-            # נכשלה (JSONDecodeError על טקסט ריק), וייתכן שזה קיצוץ
-            # (truncation) של התשובה הסופית אחרי שכמות לא-מבוטלת של
-            # טוקנים "התבזבזה" על תהליך החיפוש עצמו. מרווח בטוח יותר.
-            "max_tokens": 8000,
+            # 16000 ולא 8000 - בריצה רביעית בפועל (15/09/2026) נצפה
+            # stop_reason=max_tokens אמיתי (לא רק ניחוש): התשובה נקטעה
+            # ממש באמצע מחרוזת JSON אחרי שהריצה כללה 4 סבבי חיפוש (יותר
+            # מהרגיל) ותהליך "חשיבה" (thinking) לא-קצר בין הסבבים - שני
+            # אלה "אוכלים" ממכסת הטוקנים לפני שמגיעים לתשובה הסופית.
+            # מרווח נדיב יותר - זה רק תקרה (stop condition), לא עלות
+            # בפועל אלא אם התשובה באמת מגיעה לשם.
+            "max_tokens": 16000,
             "tools": [{"type": "web_search_20250305", "name": "web_search"}],
             "messages": [{"role": "user", "content": prompt}],
         },
@@ -173,6 +176,16 @@ def generate(start_date: str, end_date: str) -> dict:
         for b in content_blocks
     )
     print(f"  (דיאגנוסטיקה) stop_reason={data.get('stop_reason')}, בלוקים: [{block_summary}]")
+
+    if data.get("stop_reason") == "max_tokens":
+        # שגיאה ברורה ומיידית במקום לתת לזה להתגלגל לשגיאת JSON מבלבלת
+        # (למשל "Unterminated string") בהמשך - זה בדיוק מה שקרה בפועל
+        # (15/09/2026, ריצה רביעית): קיצוץ אמיתי של התשובה.
+        raise RuntimeError(
+            "תגובת ה-API נקטעה (stop_reason=max_tokens) - נגמרה מכסת "
+            "הטוקנים (max_tokens) לפני שהמודל סיים לכתוב את ה-JSON. "
+            "אם זה חוזר על עצמו, יש להגדיל עוד יותר את max_tokens בקוד."
+        )
 
     raw_text = extract_final_text(content_blocks)
     result = parse_json_response(raw_text)
