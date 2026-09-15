@@ -65,16 +65,29 @@ PROMPT_TEMPLATE = """כתוב ניתוח שבועי אנליטי לשוק ההו
 
 def extract_final_text(content_blocks):
     """מחלץ את הטקסט הסופי מהתגובה - יכולה להכיל בלוקים מעורבים (טקסט +
-    חיפושים) כשמשתמשים בכלי web_search."""
-    texts = [b["text"] for b in content_blocks if b.get("type") == "text"]
+    חיפושים) כשמשתמשים בכלי web_search. נצפה בפועל (15/09/2026, ריצה
+    ראשונה ב-GitHub Actions) שהבלוק האחרון בתגובה יכול להיות טקסט ריק
+    (כנראה ארטיפקט של התחביר סביב תוצאות חיפוש) - לכן מסננים בלוקים
+    ריקים/רווחים-בלבד ולוקחים את האחרון שיש בו תוכן בפועל, לא סתם את
+    האחרון בהחלט."""
+    texts = [b["text"] for b in content_blocks if b.get("type") == "text" and b.get("text", "").strip()]
     if not texts:
-        raise RuntimeError("לא נמצא טקסט בתגובת ה-API")
+        raise RuntimeError("לא נמצא טקסט (לא ריק) בתגובת ה-API")
     return texts[-1]
 
 
 def parse_json_response(raw_text):
     cleaned = re.sub(r"^```json\s*|\s*```$", "", raw_text.strip())
-    return json.loads(cleaned)
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError as e:
+        # כדי שכשל עתידי יהיה ניתן לאבחון ישירות מהלוג (stdout/stderr
+        # שנלכדים ע"י run_weekly_review.py) בלי צורך לחפור בממשק
+        # GitHub Actions - מדפיסים תחילת הטקסט הגולמי שהתקבל בפועל.
+        raise RuntimeError(
+            f"תגובת ה-API אינה JSON תקין ({e}). תחילת הטקסט הגולמי שהתקבל: "
+            f"{raw_text[:500]!r}"
+        ) from e
 
 
 def generate(start_date: str, end_date: str) -> dict:
@@ -95,7 +108,11 @@ def generate(start_date: str, end_date: str) -> dict:
         },
         json={
             "model": MODEL,
-            "max_tokens": 4000,
+            # 8000 ולא 4000 - בריצה הראשונה בפועל (15/09/2026) התגובה
+            # נכשלה (JSONDecodeError על טקסט ריק), וייתכן שזה קיצוץ
+            # (truncation) של התשובה הסופית אחרי שכמות לא-מבוטלת של
+            # טוקנים "התבזבזה" על תהליך החיפוש עצמו. מרווח בטוח יותר.
+            "max_tokens": 8000,
             "tools": [{"type": "web_search_20250305", "name": "web_search"}],
             "messages": [{"role": "user", "content": prompt}],
         },
@@ -106,7 +123,14 @@ def generate(start_date: str, end_date: str) -> dict:
         raise RuntimeError(f"קריאת ה-API נכשלה: status={resp.status_code}, {resp.text[:500]}")
 
     data = resp.json()
-    raw_text = extract_final_text(data.get("content", []))
+    content_blocks = data.get("content", [])
+    block_summary = ", ".join(
+        f"{b.get('type')}({len(b.get('text', '')) if b.get('type') == 'text' else '-'})"
+        for b in content_blocks
+    )
+    print(f"  (דיאגנוסטיקה) stop_reason={data.get('stop_reason')}, בלוקים: [{block_summary}]")
+
+    raw_text = extract_final_text(content_blocks)
     result = parse_json_response(raw_text)
 
     required_keys = ["summary", "past_week_events", "notable_stocks_il", "notable_stocks_us", "outlook_next_week"]
