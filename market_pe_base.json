@@ -1,53 +1,53 @@
 {
   "_meta": {
-    "snapshot_date": "16/09/2026 17:27",
+    "snapshot_date": "16/09/2026 18:00",
     "source": "bizportal.co.il",
     "note": "מכפיל בסיס לכל מניות הבורסה. יש לרענן קובץ זה מחדש (הרצה ידנית) כל רבעון בערך."
   },
   "373019": {
     "name": "אאורה",
     "pe_base": 21.89,
-    "price_base": 1819.0
+    "price_base": 1829.0
   },
   "1171818": {
     "name": "אב-גד",
     "pe_base": 15.21,
-    "price_base": 1227.0
+    "price_base": 1230.0
   },
   "1100957": {
     "name": "אבגול",
     "pe_base": "הפסד",
-    "price_base": 87.5
+    "price_base": 86.5
   },
   "1175819": {
     "name": "אבו מגורים",
     "pe_base": 52.0,
-    "price_base": 606.1
+    "price_base": 611.0
   },
   "1105055": {
     "name": "אבוג'ן",
     "pe_base": "הפסד",
-    "price_base": 156.0
+    "price_base": 153.1
   },
   "444018": {
     "name": "אביב בניה",
     "pe_base": 7.65,
-    "price_base": 1926.0
+    "price_base": 1965.0
   },
   "1245851": {
     "name": "אביסרור",
-    "pe_base": 74.63,
+    "pe_base": 73.85,
     "price_base": 1010.0
   },
   "1101666": {
     "name": "אברא",
     "pe_base": 30.07,
-    "price_base": 361.8
+    "price_base": 363.5
   },
   "675017": {
     "name": "אברבוך",
     "pe_base": 767.6,
-    "price_base": 1835.0
+    "price_base": 1860.0
   },
   "297010": {
     "name": "אברות",
@@ -57,12 +57,12 @@
   "1820083": {
     "name": "אדגר",
     "pe_base": 4.01,
-    "price_base": 388.0
+    "price_base": 391.0
   },
   "1141571": {
     "name": "או פי סי אנרגיה",
     "pe_base": 85.83,
-    "price_base": 9139.0
+    "price_base": 9128.0
   },
   "1086230": {
     "name": "או.אר.טי",
@@ -71,18 +71,18 @@
   },
   "1139617": {
     "name": "אוברסיז",
-    "pe_base": 10.92,
-    "price_base": 589.0
+    "pe_base": 10.77,
+    "price_base": 585.3
   },
   "1082965": {
     "name": "אודיוקודס",
     "pe_base": 31.35,
-    "price_base": 3025.0
+    "price_base": 3017.0
   },
   "1239185": {
     "name": "אודיסייט",
     "pe_base": "הפסד",
-    "price_base": 1070.0
+    "price_base": 1065.0
   },
   "1131697": {
     "name": "אוטומקס",
@@ -92,12 +92,12 @@
   "1083419": {
     "name": "אוטונומוס",
     "pe_base": "הפסד",
-    "price_base": 890.8
+    "price_base": 840.9
   },
   "1236967": {
     "name": "אולטרייד",
     "pe_base": 50.95,
-    "price_base": 3199.0
+    "price_base": 3177.0
   },
   "1101450": {
     "name": "אולמד סולושנס",
@@ -112,22 +112,22 @@
   "1094986": {
     "name": "אופל בלאנס",
     "pe_base": 7.16,
-    "price_base": 297.0
+    "price_base": 287.9
   },
   "1129543": {
     "name": "אופקו הלת'",
     "pe_base": "הפסד",
-    "price_base": 485.0
+    "price_base": 485.5
   },
   "1220755": {
     "name": "אורבניקה",
     "pe_base": 18.68,
-    "price_base": 795.0
+    "price_base": 789.8
   },
   "1104496": {
     "name": "אורד",
     "pe_base": 13.05,
-    "price_base": 180.1
+    "price_base": 177.9
   },
   "1176619": {
     "name": "אורה סמארט-ש",
@@ -137,22 +137,22 @@
   "1135706": {
     "name": "אורון קבוצה",
     "pe_base": 40.81,
-    "price_base": 2765.0
+    "price_base": 2769.0
   },
   "1232750": {
     "name": "אוריון",
     "pe_base": 24.67,
-    "price_base": 182.5
+    "price_base": 181.1
   },
   "1103506": {
     "name": "אוריין",
     "pe_base": "הפסד",
-    "price_base": 2437.0
+    "price_base": 2452.0
   },
   "1141324": {
     "name": "אורמד פארמ",
     "pe_base": 1.04,
-    "price_base": 1394.0
+    "price_base": 1417.0
   },
   "1134402": {
     "name": "אורמת טכנו",
@@ -162,42 +162,42 @@
   "715011": {
     "name": "אזורים",
     "pe_base": 16.15,
-    "price_base": 1658.0
+    "price_base": 1656.0
   },
   "1096106": {
     "name": "אטראו שוקי הון",
     "pe_base": 8.12,
-    "price_base": 6360.0
+    "price_base": 6344.0
   },
   "1176114": {
     "name": "אי.טי.ג'י.איי",
     "pe_base": 10.83,
-    "price_base": 2077.0
+    "price_base": 2089.0
   },
   "175018": {
     "name": "איביאי בית השק",
     "pe_base": 23.59,
-    "price_base": 44540.0
+    "price_base": 44500.0
   },
   "1084482": {
     "name": "איביאי חיתום",
     "pe_base": 5.01,
-    "price_base": 918.0
+    "price_base": 922.6
   },
   "1097054": {
     "name": "איביאי סילבר",
     "pe_base": "הפסד",
-    "price_base": 3331.0
+    "price_base": 3224.0
   },
   "1176346": {
     "name": "אידומו",
     "pe_base": "הפסד",
-    "price_base": 428.0
+    "price_base": 422.2
   },
   "281014": {
     "name": "איי.סי.אל",
     "pe_base": 22.71,
-    "price_base": 1674.0
+    "price_base": 1684.0
   },
   "431015": {
     "name": "אייאיאס",
@@ -207,47 +207,47 @@
   "1129501": {
     "name": "איידיאיי ביטוח",
     "pe_base": 10.03,
-    "price_base": 25180.0
+    "price_base": 25260.0
   },
   "1177450": {
     "name": "איידנטי",
     "pe_base": "הפסד",
-    "price_base": 193.0
+    "price_base": 192.9
   },
   "209015": {
     "name": "איילון",
     "pe_base": 11.99,
-    "price_base": 18240.0
+    "price_base": 18250.0
   },
   "1182484": {
     "name": "אייקון גרופ",
-    "pe_base": 7.3,
-    "price_base": 645.0
+    "pe_base": 7.26,
+    "price_base": 639.3
   },
   "1105907": {
     "name": "אייראנג'י טק",
     "pe_base": "הפסד",
-    "price_base": 590.0
+    "price_base": 587.0
   },
   "1080753": {
     "name": "אילקס מדיקל",
     "pe_base": 14.58,
-    "price_base": 5137.0
+    "price_base": 5091.0
   },
   "1183813": {
     "name": "אימאג'סט",
     "pe_base": 3.94,
-    "price_base": 1036.0
+    "price_base": 1060.0
   },
   "282012": {
     "name": "אימקו",
     "pe_base": 6.06,
-    "price_base": 2571.0
+    "price_base": 2587.0
   },
   "1080928": {
     "name": "אינטר תעשיות",
     "pe_base": "הפסד",
-    "price_base": 432.1
+    "price_base": 426.2
   },
   "174011": {
     "name": "אינטרגאמא",
@@ -257,7 +257,7 @@
   "1106376": {
     "name": "אינטרקיור",
     "pe_base": "הפסד",
-    "price_base": 1630.0
+    "price_base": 1622.0
   },
   "1236207": {
     "name": "אינפליי",
@@ -267,32 +267,32 @@
   "1132356": {
     "name": "אינרום",
     "pe_base": 23.95,
-    "price_base": 2620.0
+    "price_base": 2638.0
   },
   "1081074": {
     "name": "איסתא",
     "pe_base": 7.94,
-    "price_base": 9534.0
+    "price_base": 9441.0
   },
   "363010": {
     "name": "אירודרום קבוצה",
     "pe_base": "הפסד",
-    "price_base": 93.5
+    "price_base": 92.9
   },
   "1087824": {
     "name": "אל על",
     "pe_base": 10.13,
-    "price_base": 1625.0
+    "price_base": 1631.0
   },
   "1083856": {
     "name": "אלארום",
     "pe_base": 14.26,
-    "price_base": 64.4
+    "price_base": 65.4
   },
   "1081124": {
     "name": "אלביט מערכות",
     "pe_base": 51.7,
-    "price_base": 223000.0
+    "price_base": 223940.0
   },
   "1081116": {
     "name": "אלביט נדל''ן",
@@ -302,97 +302,97 @@
   "1134881": {
     "name": "אלדן תחבורה",
     "pe_base": 8.66,
-    "price_base": 634.0
+    "price_base": 639.3
   },
   "1099654": {
     "name": "אלוט",
     "pe_base": 36.05,
-    "price_base": 2420.0
+    "price_base": 2419.0
   },
   "1181643": {
     "name": "אלומה תשתיות",
     "pe_base": 11.04,
-    "price_base": 103.4
+    "price_base": 103.8
   },
   "1082635": {
     "name": "אלומיי",
     "pe_base": 4.24,
-    "price_base": 6236.0
+    "price_base": 6242.0
   },
   "390013": {
     "name": "אלוני חץ",
     "pe_base": "הפסד",
-    "price_base": 3074.0
+    "price_base": 3094.0
   },
   "1184936": {
     "name": "אלטשולר שחם פנ",
     "pe_base": 11.77,
-    "price_base": 699.7
+    "price_base": 692.0
   },
   "1136829": {
     "name": "אלמוגים",
     "pe_base": 26.49,
-    "price_base": 907.2
+    "price_base": 923.3
   },
   "1142454": {
     "name": "אלמור חשמל",
     "pe_base": 39.28,
-    "price_base": 2099.0
+    "price_base": 2100.0
   },
   "1090364": {
     "name": "אלספק",
     "pe_base": 11.23,
-    "price_base": 349.0
+    "price_base": 348.2
   },
   "1217702": {
     "name": "אלעד תוכנה",
-    "pe_base": 21.83,
+    "pe_base": 21.61,
     "price_base": 1150.0
   },
   "1183938": {
     "name": "אלפא תאו",
     "pe_base": "הפסד",
-    "price_base": 4538.0
+    "price_base": 4520.0
   },
   "694034": {
     "name": "אלקו",
     "pe_base": "הפסד",
-    "price_base": 12440.0
+    "price_base": 12430.0
   },
   "739037": {
     "name": "אלקטרה",
     "pe_base": 44.18,
-    "price_base": 11320.0
+    "price_base": 11350.0
   },
   "1094044": {
     "name": "אלקטרה נדלן",
     "pe_base": "הפסד",
-    "price_base": 2207.0
+    "price_base": 2210.0
   },
   "5010129": {
     "name": "אלקטרה צריכה",
     "pe_base": 13.39,
-    "price_base": 6210.0
+    "price_base": 6235.0
   },
   "368019": {
     "name": "אלקטריאון",
     "pe_base": "הפסד",
-    "price_base": 4731.0
+    "price_base": 4771.0
   },
   "387019": {
     "name": "אלרוב נדלן",
     "pe_base": 6.25,
-    "price_base": 25000.0
+    "price_base": 24790.0
   },
   "749077": {
     "name": "אלרון",
     "pe_base": 6.33,
-    "price_base": 350.0
+    "price_base": 355.1
   },
   "1097278": {
     "name": "אמות",
     "pe_base": 11.96,
-    "price_base": 1999.0
+    "price_base": 2010.0
   },
   "589010": {
     "name": "אמיליה פיתוח",
@@ -402,107 +402,107 @@
   "654012": {
     "name": "אמנת",
     "pe_base": 8.21,
-    "price_base": 1376.0
+    "price_base": 1373.0
   },
   "1225200": {
     "name": "אמפא",
     "pe_base": 13.15,
-    "price_base": 1367.0
+    "price_base": 1361.0
   },
   "180018": {
     "name": "אנגל שלמה",
     "pe_base": 78.67,
-    "price_base": 2116.0
+    "price_base": 2114.0
   },
   "720011": {
     "name": "אנלייט אנרגיה",
     "pe_base": 105.48,
-    "price_base": 21900.0
+    "price_base": 21930.0
   },
   "1080613": {
     "name": "אנליסט",
     "pe_base": 11.65,
-    "price_base": 12900.0
+    "price_base": 13080.0
   },
   "1155290": {
     "name": "אנרג'יאן",
     "pe_base": "הפסד",
-    "price_base": 3255.0
+    "price_base": 3229.0
   },
   "1172071": {
     "name": "אנרג'ין",
     "pe_base": "הפסד",
-    "price_base": 104.0
+    "price_base": 104.6
   },
   "1123355": {
     "name": "אנרג'יקס",
     "pe_base": 81.93,
-    "price_base": 1978.0
+    "price_base": 1960.0
   },
   "1198266": {
     "name": "אנשי העיר",
     "pe_base": 18.09,
-    "price_base": 303.8
+    "price_base": 303.4
   },
   "422014": {
     "name": "אסאר אקורד",
     "pe_base": 7.27,
-    "price_base": 5575.0
+    "price_base": 5638.0
   },
   "550012": {
     "name": "אסטיגי",
     "pe_base": 14.13,
-    "price_base": 3494.0
+    "price_base": 3438.0
   },
   "313015": {
     "name": "אספן גרופ",
     "pe_base": 3.7,
-    "price_base": 598.8
+    "price_base": 617.1
   },
   "1082114": {
     "name": "אפולו פאוור",
     "pe_base": "הפסד",
-    "price_base": 124.0
+    "price_base": 125.5
   },
   "1091354": {
     "name": "אפי נכסים",
     "pe_base": 6.76,
-    "price_base": 17720.0
+    "price_base": 17790.0
   },
   "1181437": {
     "name": "אפי קפיטל",
     "pe_base": 17.56,
-    "price_base": 1121.0
+    "price_base": 1118.0
   },
   "1182591": {
     "name": "אפיטומי מדיקל",
     "pe_base": "הפסד",
-    "price_base": 498.0
+    "price_base": 520.0
   },
   "456012": {
     "name": "אפסלון ברנדס",
     "pe_base": "הפסד",
-    "price_base": 109.0
+    "price_base": 103.0
   },
   "578013": {
     "name": "אפקון החזקות",
     "pe_base": 31.51,
-    "price_base": 50890.0
+    "price_base": 51320.0
   },
   "1097948": {
     "name": "אפריקה מגורים",
     "pe_base": 14.6,
-    "price_base": 23840.0
+    "price_base": 23740.0
   },
   "755017": {
     "name": "אקויטל",
     "pe_base": 7.03,
-    "price_base": 11160.0
+    "price_base": 11170.0
   },
   "1178334": {
     "name": "אקונרג'י",
     "pe_base": "הפסד",
-    "price_base": 5844.0
+    "price_base": 5786.0
   },
   "1085497": {
     "name": "אקס טי אל",
@@ -512,7 +512,7 @@
   "1227552": {
     "name": "אקסון ויז'ן",
     "pe_base": "הפסד",
-    "price_base": 459.0
+    "price_base": 449.5
   },
   "383018": {
     "name": "אקסיליון",
@@ -522,7 +522,7 @@
   "770016": {
     "name": "אקסל",
     "pe_base": "הפסד",
-    "price_base": 186.8
+    "price_base": 185.9
   },
   "1184902": {
     "name": "אקרו",
@@ -532,37 +532,37 @@
   "1222462": {
     "name": "אר פי אופטיקל",
     "pe_base": 50.08,
-    "price_base": 2863.0
+    "price_base": 2853.0
   },
   "299016": {
     "name": "אראסאל",
     "pe_base": 19.22,
-    "price_base": 1022.0
+    "price_base": 1023.0
   },
   "1179662": {
     "name": "ארבה רובוטיקס",
     "pe_base": "הפסד",
-    "price_base": 215.0
+    "price_base": 215.8
   },
   "1175371": {
     "name": "ארגו פרופרטיז",
     "pe_base": 10.23,
-    "price_base": 12700.0
+    "price_base": 12670.0
   },
   "1091651": {
     "name": "ארד",
     "pe_base": 11.15,
-    "price_base": 4708.0
+    "price_base": 4687.0
   },
   "366013": {
     "name": "ארי נדלן",
     "pe_base": 13.6,
-    "price_base": 473.0
+    "price_base": 474.9
   },
   "1178912": {
     "name": "אריקה כרמל",
     "pe_base": "הפסד",
-    "price_base": 46.8
+    "price_base": 45.8
   },
   "587014": {
     "name": "ארית תעשיות",
@@ -572,17 +572,17 @@
   "1085265": {
     "name": "ארן",
     "pe_base": 11.34,
-    "price_base": 4712.0
+    "price_base": 4700.0
   },
   "1095835": {
     "name": "ארפורט סיטי",
     "pe_base": 7.77,
-    "price_base": 5405.0
+    "price_base": 5435.0
   },
   "1132315": {
     "name": "אשטרום קבוצה",
     "pe_base": 107.41,
-    "price_base": 5789.0
+    "price_base": 5783.0
   },
   "1105139": {
     "name": "באבלס",
@@ -592,17 +592,17 @@
   "1158823": {
     "name": "באטמ",
     "pe_base": "הפסד",
-    "price_base": 45.0
+    "price_base": 45.1
   },
   "1179043": {
     "name": "באפ טכנו'",
     "pe_base": "הפסד",
-    "price_base": 1060.0
+    "price_base": 1081.0
   },
   "1242882": {
     "name": "בגירה",
     "pe_base": 29.53,
-    "price_base": 1055.0
+    "price_base": 1057.0
   },
   "1176635": {
     "name": "בול מסחר-ש",
@@ -612,17 +612,17 @@
   "1180595": {
     "name": "בוליגו",
     "pe_base": 28.34,
-    "price_base": 770.0
+    "price_base": 754.8
   },
   "485011": {
     "name": "בונוס ביוגרופ",
     "pe_base": "הפסד",
-    "price_base": 19.4
+    "price_base": 19.6
   },
   "531012": {
     "name": "בוני תיכון",
     "pe_base": "הפסד",
-    "price_base": 4285.0
+    "price_base": 4249.0
   },
   "1198910": {
     "name": "בזא",
@@ -632,27 +632,27 @@
   "2590248": {
     "name": "בזן",
     "pe_base": 6.29,
-    "price_base": 223.6
+    "price_base": 223.1
   },
   "230011": {
     "name": "בזק",
     "pe_base": 17.47,
-    "price_base": 757.2
+    "price_base": 760.0
   },
   "1097260": {
     "name": "ביג",
     "pe_base": 10.72,
-    "price_base": 68980.0
+    "price_base": 68880.0
   },
   "1082346": {
     "name": "ביו דבש",
     "pe_base": "הפסד",
-    "price_base": 163.9
+    "price_base": 163.2
   },
   "1096049": {
     "name": "ביו ויו",
     "pe_base": "הפסד",
-    "price_base": 82.0
+    "price_base": 79.2
   },
   "1247105": {
     "name": "ביוהרווסט",
@@ -662,12 +662,12 @@
   "1095223": {
     "name": "ביולייט",
     "pe_base": "הפסד",
-    "price_base": 286.0
+    "price_base": 292.7
   },
   "1101518": {
     "name": "ביוליין",
     "pe_base": "הפסד",
-    "price_base": 1.4
+    "price_base": 1.3
   },
   "1175561": {
     "name": "ביונ תלת מימד-ש",
@@ -677,12 +677,12 @@
   "1173376": {
     "name": "ביטקור קפיטל",
     "pe_base": "הפסד",
-    "price_base": 32.7
+    "price_base": 32.4
   },
   "593038": {
     "name": "בינלאומי",
     "pe_base": 11.05,
-    "price_base": 23980.0
+    "price_base": 24090.0
   },
   "530014": {
     "name": "בירמן",
@@ -697,22 +697,22 @@
   "235010": {
     "name": "בית הזהב",
     "pe_base": 18.52,
-    "price_base": 1098.0
+    "price_base": 1085.0
   },
   "1185362": {
     "name": "בית וגג",
     "pe_base": "הפסד",
-    "price_base": 554.0
+    "price_base": 552.9
   },
   "1081561": {
     "name": "בית שמש",
     "pe_base": 42.64,
-    "price_base": 78180.0
+    "price_base": 77860.0
   },
   "1172618": {
     "name": "בכורי שדה",
     "pe_base": 8.35,
-    "price_base": 411.1
+    "price_base": 408.7
   },
   "1172337": {
     "name": "בלאקאדג'",
@@ -722,7 +722,7 @@
   "1212539": {
     "name": "בלדי",
     "pe_base": 20.63,
-    "price_base": 6336.0
+    "price_base": 6300.0
   },
   "1096890": {
     "name": "בלו וייב-ש",
@@ -732,7 +732,7 @@
   "1170513": {
     "name": "בלייד ריינג'ר",
     "pe_base": 0.38,
-    "price_base": 40.9
+    "price_base": 41.3
   },
   "424010": {
     "name": "בליץ",
@@ -742,27 +742,27 @@
   "1172097": {
     "name": "בלנדר",
     "pe_base": "הפסד",
-    "price_base": 480.0
+    "price_base": 460.2
   },
   "1242650": {
     "name": "בסט קבוצה",
     "pe_base": 51.98,
-    "price_base": 1460.0
+    "price_base": 1456.0
   },
   "1100718": {
     "name": "בריינסוויי",
     "pe_base": 54.48,
-    "price_base": 4062.0
+    "price_base": 4086.0
   },
   "399014": {
     "name": "בריל",
     "pe_base": "הפסד",
-    "price_base": 1268.0
+    "price_base": 1353.0
   },
   "1094283": {
     "name": "ברימאג",
     "pe_base": 7.2,
-    "price_base": 2001.0
+    "price_base": 2004.0
   },
   "1094515": {
     "name": "ברם תעשיות",
@@ -772,17 +772,17 @@
   "286013": {
     "name": "ברן",
     "pe_base": 32.27,
-    "price_base": 1956.0
+    "price_base": 1949.0
   },
   "536011": {
     "name": "ברנד",
     "pe_base": "הפסד",
-    "price_base": 287.0
+    "price_base": 285.4
   },
   "1104363": {
     "name": "ברק בית השקעות",
     "pe_base": 281.87,
-    "price_base": 4080.0
+    "price_base": 4075.0
   },
   "1178276": {
     "name": "ברקת",
@@ -797,12 +797,12 @@
   "454017": {
     "name": "גאון קבוצה",
     "pe_base": 21.82,
-    "price_base": 2100.0
+    "price_base": 2102.0
   },
   "759019": {
     "name": "גב ים",
     "pe_base": 12.73,
-    "price_base": 3800.0
+    "price_base": 3808.0
   },
   "1224641": {
     "name": "גבאי קבוצה",
@@ -812,37 +812,37 @@
   "1176726": {
     "name": "גוטו",
     "pe_base": "הפסד",
-    "price_base": 431.2
+    "price_base": 436.7
   },
   "149013": {
     "name": "גולד",
     "pe_base": 18.24,
-    "price_base": 19780.0
+    "price_base": 19460.0
   },
   "1083443": {
     "name": "גולדן אנרג'י",
     "pe_base": "הפסד",
-    "price_base": 193.0
+    "price_base": 192.7
   },
   "1091933": {
     "name": "גולן תעשיות",
     "pe_base": 21.81,
-    "price_base": 683.0
+    "price_base": 683.3
   },
   "1096148": {
     "name": "גולף",
     "pe_base": 7.09,
-    "price_base": 885.1
+    "price_base": 880.7
   },
   "1156280": {
     "name": "ג'י וואן",
     "pe_base": 23.0,
-    "price_base": 1109.0
+    "price_base": 1097.0
   },
   "126011": {
     "name": "ג'י סיטי",
     "pe_base": 10.95,
-    "price_base": 1113.0
+    "price_base": 1110.0
   },
   "448019": {
     "name": "גיבוי אחזקות",
@@ -852,22 +852,22 @@
   "1082510": {
     "name": "גילת",
     "pe_base": 23.02,
-    "price_base": 2967.0
+    "price_base": 2944.0
   },
   "1080597": {
     "name": "גילת טלקום",
     "pe_base": 7.81,
-    "price_base": 218.7
+    "price_base": 217.5
   },
   "1099787": {
     "name": "ג'ין טכנולוגיות",
     "pe_base": "הפסד",
-    "price_base": 628.3
+    "price_base": 625.3
   },
   "744011": {
     "name": "גיקס",
     "pe_base": "הפסד",
-    "price_base": 1680.0
+    "price_base": 1647.0
   },
   "1141316": {
     "name": "גלובל כנפיים",
@@ -882,7 +882,7 @@
   "1147487": {
     "name": "גלוברנדס",
     "pe_base": 2.29,
-    "price_base": 11270.0
+    "price_base": 11210.0
   },
   "1243112": {
     "name": "גלעם",
@@ -892,7 +892,7 @@
   "532010": {
     "name": "גן שמואל",
     "pe_base": 23.8,
-    "price_base": 2049.0
+    "price_base": 2046.0
   },
   "1178862": {
     "name": "ג'נגו",
@@ -902,37 +902,37 @@
   "1095892": {
     "name": "גניגר",
     "pe_base": 19.0,
-    "price_base": 551.0
+    "price_base": 563.0
   },
   "1169689": {
     "name": "ג'נסל",
     "pe_base": "הפסד",
-    "price_base": 73.0
+    "price_base": 70.6
   },
   "1156926": {
     "name": "ג'נריישן קפיטל",
     "pe_base": 4.45,
-    "price_base": 247.4
+    "price_base": 247.1
   },
   "1118116": {
     "name": "גפן מגורים",
     "pe_base": "הפסד",
-    "price_base": 77.9
+    "price_base": 78.0
   },
   "1180181": {
     "name": "גרופ 107",
     "pe_base": "הפסד",
-    "price_base": 64.8
+    "price_base": 61.6
   },
   "1184365": {
     "name": "גרייס ברידינג",
     "pe_base": "הפסד",
-    "price_base": 1630.0
+    "price_base": 1690.0
   },
   "400010": {
     "name": "דוניץ",
     "pe_base": "הפסד",
-    "price_base": 23700.0
+    "price_base": 23500.0
   },
   "1093202": {
     "name": "דור אלון",
@@ -942,57 +942,57 @@
   "1166768": {
     "name": "דוראל אנרגיה",
     "pe_base": "הפסד",
-    "price_base": 5205.0
+    "price_base": 5197.0
   },
   "1190628": {
     "name": "דורסל",
     "pe_base": 5.6,
-    "price_base": 1968.0
+    "price_base": 1982.0
   },
   "1238013": {
     "name": "דיאסאייטי",
     "pe_base": 19.85,
-    "price_base": 1431.0
+    "price_base": 1455.0
   },
   "691212": {
     "name": "דיסקונט       א",
     "pe_base": 10.69,
-    "price_base": 3655.0
+    "price_base": 3649.0
   },
   "639013": {
     "name": "דיסקונט השקעות",
     "pe_base": 89.19,
-    "price_base": 810.0
+    "price_base": 807.8
   },
   "1173491": {
     "name": "דיפלומט אחזקות",
     "pe_base": 16.26,
-    "price_base": 4485.0
+    "price_base": 4491.0
   },
   "1243757": {
     "name": "דלק ייזום",
     "pe_base": 225.12,
-    "price_base": 7203.0
+    "price_base": 7190.0
   },
   "1196211": {
     "name": "דלק נכסים",
     "pe_base": 8.59,
-    "price_base": 6778.0
+    "price_base": 6737.0
   },
   "1084128": {
     "name": "דלק קבוצה",
     "pe_base": 4.77,
-    "price_base": 8887.0
+    "price_base": 8870.0
   },
   "829010": {
     "name": "דלק רכב",
     "pe_base": "הפסד",
-    "price_base": 1765.0
+    "price_base": 1757.0
   },
   "627034": {
     "name": "דלתא גליל",
     "pe_base": 15.09,
-    "price_base": 17780.0
+    "price_base": 17910.0
   },
   "1173699": {
     "name": "דלתא מותגים",
@@ -1002,12 +1002,12 @@
   "1090315": {
     "name": "דמרי",
     "pe_base": 24.94,
-    "price_base": 37150.0
+    "price_base": 37030.0
   },
   "822015": {
     "name": "דן מלונות",
     "pe_base": "הפסד",
-    "price_base": 2694.0
+    "price_base": 2697.0
   },
   "314013": {
     "name": "דנאל",
@@ -1017,12 +1017,12 @@
   "1173137": {
     "name": "דניה סיבוס",
     "pe_base": 21.17,
-    "price_base": 10450.0
+    "price_base": 10390.0
   },
   "1159029": {
     "name": "הבורסה לניע בתא",
     "pe_base": 45.67,
-    "price_base": 12910.0
+    "price_base": 12820.0
   },
   "1095405": {
     "name": "הדסית ביו-ש",
@@ -1032,57 +1032,57 @@
   "1142587": {
     "name": "הולמס פלייס",
     "pe_base": 17.6,
-    "price_base": 582.4
+    "price_base": 580.8
   },
   "1172204": {
     "name": "הום ביוגז",
     "pe_base": "הפסד",
-    "price_base": 94.0
+    "price_base": 93.9
   },
   "1184985": {
     "name": "הייפר גלובל",
     "pe_base": 24.35,
-    "price_base": 3060.0
+    "price_base": 3069.0
   },
   "1121474": {
     "name": "הכשרה התחדשות",
     "pe_base": "הפסד",
-    "price_base": 685.0
+    "price_base": 682.0
   },
   "612010": {
     "name": "הכשרת הישוב",
     "pe_base": 6.06,
-    "price_base": 3918.0
+    "price_base": 3905.0
   },
   "1104959": {
     "name": "המשביר 365",
     "pe_base": "הפסד",
-    "price_base": 46.7
+    "price_base": 46.6
   },
   "767012": {
     "name": "הפניקס",
     "pe_base": 14.18,
-    "price_base": 18790.0
+    "price_base": 18800.0
   },
   "585018": {
     "name": "הראל השקעות",
     "pe_base": 12.29,
-    "price_base": 19830.0
+    "price_base": 19860.0
   },
   "161018": {
     "name": "וואן טכנולוגיות",
     "pe_base": 18.67,
-    "price_base": 6879.0
+    "price_base": 6880.0
   },
   "1180306": {
     "name": "ווטר אי או",
     "pe_base": 2.84,
-    "price_base": 135.1
+    "price_base": 139.3
   },
   "486027": {
     "name": "וויי בוקס",
     "pe_base": "הפסד",
-    "price_base": 81.8
+    "price_base": 81.3
   },
   "1105162": {
     "name": "ווינד באז-ס",
@@ -1092,7 +1092,7 @@
   "1173228": {
     "name": "ווישור גלובלטק",
     "pe_base": 9.69,
-    "price_base": 1620.0
+    "price_base": 1610.0
   },
   "350017": {
     "name": "ויז'ן סיגמא",
@@ -1102,82 +1102,82 @@
   "416016": {
     "name": "וילאר",
     "pe_base": 10.31,
-    "price_base": 17610.0
+    "price_base": 17500.0
   },
   "371013": {
     "name": "וילי פוד",
     "pe_base": 15.53,
-    "price_base": 5598.0
+    "price_base": 5320.0
   },
   "1082858": {
     "name": "ויליפוד אינטרנש",
     "pe_base": 13.96,
-    "price_base": 8092.0
+    "price_base": 8005.0
   },
   "278010": {
     "name": "וילק",
     "pe_base": "הפסד",
-    "price_base": 520.0
+    "price_base": 522.2
   },
   "1123777": {
     "name": "ויקטורי",
     "pe_base": 13.49,
-    "price_base": 3956.0
+    "price_base": 3958.0
   },
   "1109966": {
     "name": "ויתניה",
     "pe_base": "הפסד",
-    "price_base": 1659.0
+    "price_base": 1656.0
   },
   "1170240": {
     "name": "ולוריקס",
     "pe_base": "הפסד",
-    "price_base": 152.9
+    "price_base": 153.5
   },
   "1176387": {
     "name": "ורידיס",
     "pe_base": 20.95,
-    "price_base": 4745.0
+    "price_base": 4738.0
   },
   "1174184": {
     "name": "זוז אסטרטגיה",
     "pe_base": "הפסד",
-    "price_base": 2214.0
+    "price_base": 2213.0
   },
   "130013": {
     "name": "זנלכל",
     "pe_base": 14.61,
-    "price_base": 4691.0
+    "price_base": 4640.0
   },
   "1194695": {
     "name": "זפירוס",
     "pe_base": "הפסד",
-    "price_base": 2430.0
+    "price_base": 2404.0
   },
   "576017": {
     "name": "חברה לישראל",
     "pe_base": 16.0,
-    "price_base": 8315.0
+    "price_base": 8381.0
   },
   "823013": {
     "name": "חג'ג'",
     "pe_base": 16.04,
-    "price_base": 2023.0
+    "price_base": 2042.0
   },
   "1143635": {
     "name": "חג'ג' אירופה",
     "pe_base": "הפסד",
-    "price_base": 1471.0
+    "price_base": 1476.0
   },
   "351015": {
     "name": "חד",
     "pe_base": 12.14,
-    "price_base": 3194.0
+    "price_base": 3185.0
   },
   "1084698": {
     "name": "חילן",
     "pe_base": 20.82,
-    "price_base": 24320.0
+    "price_base": 24440.0
   },
   "150011": {
     "name": "חירון",
@@ -1187,82 +1187,82 @@
   "1092345": {
     "name": "חלל תקשורת",
     "pe_base": 1.77,
-    "price_base": 201.5
+    "price_base": 203.7
   },
   "1104785": {
     "name": "חממה סחר",
     "pe_base": 4.95,
-    "price_base": 532.0
+    "price_base": 530.2
   },
   "384016": {
     "name": "חמת",
     "pe_base": 32.71,
-    "price_base": 1429.0
+    "price_base": 1421.0
   },
   "1082379": {
     "name": "טאואר",
     "pe_base": 73.53,
-    "price_base": 61630.0
+    "price_base": 62500.0
   },
   "629014": {
     "name": "טבע",
     "pe_base": 56.35,
-    "price_base": 11700.0
+    "price_base": 11800.0
   },
   "462010": {
     "name": "טוגדר",
     "pe_base": 19.29,
-    "price_base": 216.0
+    "price_base": 215.5
   },
   "1180686": {
     "name": "טונדו סמארט",
     "pe_base": "הפסד",
-    "price_base": 680.0
+    "price_base": 675.2
   },
   "1179142": {
     "name": "טופ גאם",
     "pe_base": "הפסד",
-    "price_base": 1023.0
+    "price_base": 1011.0
   },
   "1083377": {
     "name": "טופ גרופ",
     "pe_base": 13.42,
-    "price_base": 1040.0
+    "price_base": 1038.0
   },
   "1181742": {
     "name": "טורבוג'ן",
     "pe_base": "הפסד",
-    "price_base": 1181.0
+    "price_base": 1193.0
   },
   "1243013": {
     "name": "טי אנד אם",
     "pe_base": 42.14,
-    "price_base": 6500.0
+    "price_base": 6458.0
   },
   "1090141": {
     "name": "טי.ג'י.איי",
     "pe_base": 8.62,
-    "price_base": 179.1
+    "price_base": 170.0
   },
   "1209477": {
     "name": "טיאסג'י",
     "pe_base": 36.99,
-    "price_base": 28510.0
+    "price_base": 28460.0
   },
   "103010": {
     "name": "טיב טעם",
     "pe_base": 14.99,
-    "price_base": 1193.0
+    "price_base": 1185.0
   },
   "1165307": {
     "name": "טכנ גילוי אש גז",
     "pe_base": "הפסד",
-    "price_base": 890.0
+    "price_base": 893.1
   },
   "354019": {
     "name": "טלסיס",
     "pe_base": 23.21,
-    "price_base": 37080.0
+    "price_base": 37000.0
   },
   "216010": {
     "name": "טקטונה",
@@ -1272,17 +1272,17 @@
   "1180173": {
     "name": "טראלייט",
     "pe_base": "הפסד",
-    "price_base": 1645.0
+    "price_base": 1610.0
   },
   "1174093": {
     "name": "טראקנט",
     "pe_base": 10.0,
-    "price_base": 61.2
+    "price_base": 57.4
   },
   "1178714": {
     "name": "טרמינל איקס",
     "pe_base": 29.99,
-    "price_base": 776.9
+    "price_base": 777.7
   },
   "111013": {
     "name": "י.ב התחדשות",
@@ -1297,12 +1297,12 @@
   "1161264": {
     "name": "יוחננוף",
     "pe_base": 24.53,
-    "price_base": 34270.0
+    "price_base": 34100.0
   },
   "1157114": {
     "name": "יוטרון",
     "pe_base": 28.2,
-    "price_base": 466.4
+    "price_base": 463.7
   },
   "1170000": {
     "name": "יומן אקסטנשנס-ש",
@@ -1312,12 +1312,12 @@
   "1144773": {
     "name": "יוניברסל מוטורס",
     "pe_base": 15.18,
-    "price_base": 2848.0
+    "price_base": 2852.0
   },
   "1083831": {
     "name": "יוניטרוניקס",
     "pe_base": 14.43,
-    "price_base": 1999.0
+    "price_base": 1993.0
   },
   "1188416": {
     "name": "יסודות",
@@ -1332,17 +1332,17 @@
   "1185057": {
     "name": "יעקב פיננסים",
     "pe_base": 7.97,
-    "price_base": 2803.0
+    "price_base": 2810.0
   },
   "1142421": {
     "name": "יעקובי קבוצה",
     "pe_base": "הפסד",
-    "price_base": 94.0
+    "price_base": 92.8
   },
   "704015": {
     "name": "יצוא",
     "pe_base": 5.36,
-    "price_base": 6822.0
+    "price_base": 6828.0
   },
   "726018": {
     "name": "ירושלים",
@@ -1352,17 +1352,17 @@
   "1187194": {
     "name": "ישראייר גרופ",
     "pe_base": 57.68,
-    "price_base": 150.7
+    "price_base": 150.6
   },
   "1157403": {
     "name": "ישראכרט",
     "pe_base": 15.89,
-    "price_base": 1122.0
+    "price_base": 1116.0
   },
   "434019": {
     "name": "ישראל קנדה",
     "pe_base": 202.04,
-    "price_base": 1446.0
+    "price_base": 1440.0
   },
   "1103852": {
     "name": "ישראל קנדה מלונ",
@@ -1372,42 +1372,42 @@
   "1080985": {
     "name": "ישרוטל",
     "pe_base": 32.82,
-    "price_base": 13290.0
+    "price_base": 13330.0
   },
   "613034": {
     "name": "ישרס",
     "pe_base": 9.87,
-    "price_base": 84820.0
+    "price_base": 85060.0
   },
   "1202977": {
     "name": "ישרס אחזקות",
     "pe_base": 9.64,
-    "price_base": 41320.0
+    "price_base": 41350.0
   },
   "810010": {
     "name": "כהן פיתוח",
     "pe_base": 12.4,
-    "price_base": 15610.0
+    "price_base": 15160.0
   },
   "1104280": {
     "name": "כלל ביוטכנו",
     "pe_base": "הפסד",
-    "price_base": 25.6
+    "price_base": 24.9
   },
   "224014": {
     "name": "כלל עסקי ביטוח",
     "pe_base": 9.64,
-    "price_base": 28880.0
+    "price_base": 28940.0
   },
   "1094473": {
     "name": "כן פייט ביופרמה",
     "pe_base": "הפסד",
-    "price_base": 347.9
+    "price_base": 345.3
   },
   "543017": {
     "name": "כנפיים",
     "pe_base": 5.4,
-    "price_base": 1825.0
+    "price_base": 1829.0
   },
   "522011": {
     "name": "כפרית",
@@ -1417,22 +1417,22 @@
   "440016": {
     "name": "כרמית",
     "pe_base": 16.99,
-    "price_base": 1639.0
+    "price_base": 1638.0
   },
   "1147685": {
     "name": "כרמל קורפ",
     "pe_base": "הפסד",
-    "price_base": 1470.0
+    "price_base": 1459.0
   },
   "604611": {
     "name": "לאומי",
     "pe_base": 11.13,
-    "price_base": 7916.0
+    "price_base": 7948.0
   },
   "136010": {
     "name": "להב",
     "pe_base": 10.0,
-    "price_base": 1137.0
+    "price_base": 1142.0
   },
   "753012": {
     "name": "לודזיה",
@@ -1447,7 +1447,7 @@
   "1226992": {
     "name": "לודן-טק",
     "pe_base": "הפסד",
-    "price_base": 396.4
+    "price_base": 396.2
   },
   "666016": {
     "name": "לוזון אשראי",
@@ -1457,12 +1457,12 @@
   "473017": {
     "name": "לוזון קבוצה",
     "pe_base": 4.95,
-    "price_base": 424.0
+    "price_base": 427.4
   },
   "1202597": {
     "name": "לוזון רונסון",
     "pe_base": 51.47,
-    "price_base": 3078.0
+    "price_base": 3194.0
   },
   "200014": {
     "name": "לוינסקי עופר",
@@ -1472,22 +1472,22 @@
   "573014": {
     "name": "לוינשטין הנדסה",
     "pe_base": 23.58,
-    "price_base": 36030.0
+    "price_base": 35800.0
   },
   "584011": {
     "name": "ליבנטל",
     "pe_base": 1.59,
-    "price_base": 1438.0
+    "price_base": 1435.0
   },
   "1176981": {
     "name": "ליברה",
     "pe_base": 14.76,
-    "price_base": 3078.0
+    "price_base": 3050.0
   },
   "1136365": {
     "name": "ליניאג תרפיוטיק",
     "pe_base": "הפסד",
-    "price_base": 320.0
+    "price_base": 323.5
   },
   "826016": {
     "name": "לכיש",
@@ -1497,32 +1497,32 @@
   "1140946": {
     "name": "לסיכו",
     "pe_base": 10.09,
-    "price_base": 357.6
+    "price_base": 358.2
   },
   "642017": {
     "name": "לפידות קפיטל",
     "pe_base": 17.78,
-    "price_base": 7766.0
+    "price_base": 7791.0
   },
   "1172972": {
     "name": "מאסיבית",
     "pe_base": "הפסד",
-    "price_base": 56.0
+    "price_base": 56.3
   },
   "127019": {
     "name": "מבטח שמיר",
     "pe_base": 237.09,
-    "price_base": 38810.0
+    "price_base": 38740.0
   },
   "226019": {
     "name": "מבנה",
     "pe_base": 17.4,
-    "price_base": 1302.0
+    "price_base": 1303.0
   },
   "1081165": {
     "name": "מגדל ביטוח",
     "pe_base": 11.39,
-    "price_base": 2078.0
+    "price_base": 2088.0
   },
   "1131523": {
     "name": "מגדלי תיכון",
@@ -1532,7 +1532,7 @@
   "1104488": {
     "name": "מגה אור",
     "pe_base": 13.42,
-    "price_base": 45710.0
+    "price_base": 45920.0
   },
   "1139195": {
     "name": "מגוריט",
@@ -1542,47 +1542,47 @@
   "1216605": {
     "name": "מגידו",
     "pe_base": 15.07,
-    "price_base": 654.9
+    "price_base": 654.6
   },
   "1139955": {
     "name": "מדיפאואר",
     "pe_base": 16.48,
-    "price_base": 493.0
+    "price_base": 494.2
   },
   "686014": {
     "name": "מהדרין",
     "pe_base": 8.11,
-    "price_base": 30340.0
+    "price_base": 30310.0
   },
   "1171669": {
     "name": "מולטי ריטייל",
     "pe_base": 13.21,
-    "price_base": 860.0
+    "price_base": 868.6
   },
   "1184381": {
     "name": "מור גמל פנסיה",
     "pe_base": 25.7,
-    "price_base": 1617.0
+    "price_base": 1634.0
   },
   "1141464": {
     "name": "מור השקעות",
     "pe_base": 23.58,
-    "price_base": 4489.0
+    "price_base": 4496.0
   },
   "1223858": {
     "name": "מותג עירוני",
     "pe_base": "הפסד",
-    "price_base": 360.0
+    "price_base": 359.1
   },
   "695437": {
     "name": "מזרחי טפחות",
     "pe_base": 11.05,
-    "price_base": 24020.0
+    "price_base": 24040.0
   },
   "1228808": {
     "name": "מחלבות גד",
     "pe_base": 23.63,
-    "price_base": 1285.0
+    "price_base": 1275.0
   },
   "716019": {
     "name": "מטעי הדר 1",
@@ -1597,47 +1597,47 @@
   "1176791": {
     "name": "מטריסלף",
     "pe_base": "הפסד",
-    "price_base": 261.1
+    "price_base": 264.2
   },
   "445015": {
     "name": "מטריקס",
     "pe_base": 22.58,
-    "price_base": 10300.0
+    "price_base": 10290.0
   },
   "544015": {
     "name": "מידאס",
     "pe_base": "הפסד",
-    "price_base": 33.6
+    "price_base": 31.1
   },
   "494013": {
     "name": "מיה דיינמיקס",
     "pe_base": "הפסד",
-    "price_base": 27.0
+    "price_base": 27.1
   },
   "507012": {
     "name": "מיחשוב ישר קב",
     "pe_base": 11.94,
-    "price_base": 34510.0
+    "price_base": 34260.0
   },
   "1081843": {
     "name": "מיטב השקעות",
     "pe_base": 11.02,
-    "price_base": 11960.0
+    "price_base": 12000.0
   },
   "1203181": {
     "name": "מיטב טרייד",
     "pe_base": 15.22,
-    "price_base": 2294.0
+    "price_base": 2298.0
   },
   "1091065": {
     "name": "מיטרוניקס",
     "pe_base": "הפסד",
-    "price_base": 227.0
+    "price_base": 226.4
   },
   "1168186": {
     "name": "מימון ישיר",
     "pe_base": 9.93,
-    "price_base": 67160.0
+    "price_base": 66620.0
   },
   "1108638": {
     "name": "מירלנד-ש",
@@ -1647,27 +1647,27 @@
   "1105196": {
     "name": "מישורים",
     "pe_base": "הפסד",
-    "price_base": 352.8
+    "price_base": 354.2
   },
   "1179753": {
     "name": "מכלול מימון",
     "pe_base": 9.43,
-    "price_base": 1201.0
+    "price_base": 1198.0
   },
   "1229335": {
     "name": "מכפל טכנולוגיות",
     "pe_base": 43.5,
-    "price_base": 5294.0
+    "price_base": 5017.0
   },
   "323014": {
     "name": "מליסרון",
     "pe_base": 11.15,
-    "price_base": 40700.0
+    "price_base": 40760.0
   },
   "731018": {
     "name": "מלם-תים אחזקות",
     "pe_base": 23.66,
-    "price_base": 18210.0
+    "price_base": 18100.0
   },
   "1170950": {
     "name": "מלרן",
@@ -1677,32 +1677,32 @@
   "1129444": {
     "name": "מנדלסוןתשת",
     "pe_base": 12.76,
-    "price_base": 1495.0
+    "price_base": 1449.0
   },
   "566018": {
     "name": "מנורה מב החז",
     "pe_base": 13.42,
-    "price_base": 54180.0
+    "price_base": 54400.0
   },
   "1140573": {
     "name": "מניבים ריט",
     "pe_base": 7.68,
-    "price_base": 184.9
+    "price_base": 184.0
   },
   "1170893": {
     "name": "מניף",
     "pe_base": 6.75,
-    "price_base": 2219.0
+    "price_base": 2206.0
   },
   "1238427": {
     "name": "מנרב",
-    "pe_base": 131.85,
-    "price_base": 2372.0
+    "pe_base": 130.71,
+    "price_base": 2381.0
   },
   "1168533": {
     "name": "מספנות ישראל",
     "pe_base": 60.34,
-    "price_base": 10050.0
+    "price_base": 10010.0
   },
   "1244888": {
     "name": "מעבדות רפא",
@@ -1712,77 +1712,77 @@
   "1106749": {
     "name": "מצלאוי",
     "pe_base": 105.44,
-    "price_base": 1183.0
+    "price_base": 1178.0
   },
   "1168558": {
     "name": "מקס סטוק",
     "pe_base": 32.32,
-    "price_base": 3349.0
+    "price_base": 3334.0
   },
   "338012": {
     "name": "מר",
     "pe_base": 14.12,
-    "price_base": 5030.0
+    "price_base": 5050.0
   },
   "257014": {
     "name": "מרחביה אחזקות",
     "pe_base": "הפסד",
-    "price_base": 143.9
+    "price_base": 140.0
   },
   "1166974": {
     "name": "משק אנרגיה",
     "pe_base": "הפסד",
-    "price_base": 1013.0
+    "price_base": 1001.0
   },
   "208017": {
     "name": "נאוי",
     "pe_base": 6.39,
-    "price_base": 4810.0
+    "price_base": 4813.0
   },
   "1175116": {
     "name": "נאייקס",
     "pe_base": 184.07,
-    "price_base": 13280.0
+    "price_base": 13200.0
   },
   "1084557": {
     "name": "נובה",
     "pe_base": 36.34,
-    "price_base": 103670.0
+    "price_base": 104040.0
   },
   "1140151": {
     "name": "נובולוג",
     "pe_base": "הפסד",
-    "price_base": 73.2
+    "price_base": 72.3
   },
   "1170877": {
     "name": "נופר אנרג'י",
     "pe_base": 48.92,
-    "price_base": 15280.0
+    "price_base": 15200.0
   },
   "1175728": {
     "name": "נור",
     "pe_base": "הפסד",
-    "price_base": 663.5
+    "price_base": 663.7
   },
   "723007": {
     "name": "נורסטאר",
     "pe_base": 15.64,
-    "price_base": 748.9
+    "price_base": 748.2
   },
   "168013": {
     "name": "נטו אחזקות",
     "pe_base": 6.98,
-    "price_base": 17660.0
+    "price_base": 17550.0
   },
   "1105097": {
     "name": "נטו מלינדה",
     "pe_base": 10.22,
-    "price_base": 11660.0
+    "price_base": 11640.0
   },
   "273011": {
     "name": "נייס",
     "pe_base": 13.61,
-    "price_base": 31060.0
+    "price_base": 30860.0
   },
   "660019": {
     "name": "ניסן",
@@ -1792,12 +1792,12 @@
   "699017": {
     "name": "נכסים ובנין",
     "pe_base": 31.07,
-    "price_base": 28150.0
+    "price_base": 28370.0
   },
   "643015": {
     "name": "נפטא",
     "pe_base": 10.59,
-    "price_base": 2443.0
+    "price_base": 2437.0
   },
   "1083930": {
     "name": "נקסט ג'ן-ש",
@@ -1807,12 +1807,12 @@
   "1176593": {
     "name": "נקסט ויז'ן",
     "pe_base": 43.35,
-    "price_base": 23140.0
+    "price_base": 23350.0
   },
   "433011": {
     "name": "נקסטייג'",
     "pe_base": "הפסד",
-    "price_base": 40.9
+    "price_base": 40.3
   },
   "1171933": {
     "name": "נקסטפרם-ש",
@@ -1822,22 +1822,22 @@
   "1095785": {
     "name": "נקסטקום",
     "pe_base": "הפסד",
-    "price_base": 1197.0
+    "price_base": 1203.0
   },
   "421016": {
     "name": "נתנאל גרופ",
     "pe_base": "הפסד",
-    "price_base": 970.9
+    "price_base": 973.7
   },
   "1194513": {
     "name": "נתנאל מניבים",
-    "pe_base": 19.42,
-    "price_base": 221.1
+    "pe_base": 19.38,
+    "price_base": 219.5
   },
   "1081686": {
     "name": "סאמיט",
     "pe_base": 6.67,
-    "price_base": 4572.0
+    "price_base": 4545.0
   },
   "1082353": {
     "name": "סאני תקשורת",
@@ -1847,7 +1847,7 @@
   "1098755": {
     "name": "סאנפלאואר",
     "pe_base": 8.07,
-    "price_base": 948.1
+    "price_base": 946.2
   },
   "1169978": {
     "name": "סבוריט-ש",
@@ -1857,12 +1857,12 @@
   "1233014": {
     "name": "סוגת",
     "pe_base": 10.27,
-    "price_base": 1759.0
+    "price_base": 1762.0
   },
   "1172287": {
     "name": "סולאיר",
     "pe_base": "הפסד",
-    "price_base": 9038.0
+    "price_base": 9034.0
   },
   "1244631": {
     "name": "סולה אנרגיות",
@@ -1877,47 +1877,47 @@
   "1177518": {
     "name": "סולרום החז",
     "pe_base": 31.07,
-    "price_base": 606.9
+    "price_base": 608.8
   },
   "1170539": {
     "name": "סונוביה",
     "pe_base": "הפסד",
-    "price_base": 47.9
+    "price_base": 47.5
   },
   "1226877": {
     "name": "סונול נדלן",
     "pe_base": 11.82,
-    "price_base": 4187.0
+    "price_base": 4168.0
   },
   "1175439": {
     "name": "סופווייב",
     "pe_base": 42.52,
-    "price_base": 3124.0
+    "price_base": 3118.0
   },
   "1166917": {
     "name": "סופרגז פאוור",
     "pe_base": "הפסד",
-    "price_base": 2638.0
+    "price_base": 2637.0
   },
   "1181569": {
     "name": "סופרין",
     "pe_base": 44.76,
-    "price_base": 585.0
+    "price_base": 584.1
   },
   "1169895": {
     "name": "סטארק פאוור",
     "pe_base": "הפסד",
-    "price_base": 1072.0
+    "price_base": 1078.0
   },
   "1122654": {
     "name": "סטורג' דרופ",
     "pe_base": "הפסד",
-    "price_base": 48.0
+    "price_base": 47.4
   },
   "1205913": {
     "name": "סטרוברי אינק",
     "pe_base": 20.87,
-    "price_base": 4378.0
+    "price_base": 4215.0
   },
   "1194000": {
     "name": "סיאון",
@@ -1927,7 +1927,7 @@
   "442012": {
     "name": "סיאי",
     "pe_base": "הפסד",
-    "price_base": 1569.0
+    "price_base": 1554.0
   },
   "1166693": {
     "name": "סייברוואן-ס",
@@ -1942,47 +1942,47 @@
   "1109644": {
     "name": "סלע נדלן",
     "pe_base": 9.43,
-    "price_base": 857.6
+    "price_base": 855.6
   },
   "1101534": {
     "name": "סלקום",
     "pe_base": 10.45,
-    "price_base": 3728.0
+    "price_base": 3737.0
   },
   "1237742": {
     "name": "סמארט שוטר",
     "pe_base": 125.86,
-    "price_base": 1476.0
+    "price_base": 1480.0
   },
   "813014": {
     "name": "סנו",
     "pe_base": 13.42,
-    "price_base": 34890.0
+    "price_base": 34750.0
   },
   "1090117": {
     "name": "ספאנטק",
     "pe_base": 9.32,
-    "price_base": 247.2
+    "price_base": 246.2
   },
   "1178284": {
     "name": "ספידווליו",
-    "pe_base": 15.2,
+    "pe_base": 15.1,
     "price_base": 206.7
   },
   "1097344": {
     "name": "ספרינג",
     "pe_base": 12.91,
-    "price_base": 523.9
+    "price_base": 517.3
   },
   "1178490": {
     "name": "סקודיקס",
     "pe_base": "הפסד",
-    "price_base": 116.7
+    "price_base": 116.6
   },
   "288019": {
     "name": "סקופ",
     "pe_base": 20.04,
-    "price_base": 27390.0
+    "price_base": 27340.0
   },
   "1131556": {
     "name": "סקייליין",
@@ -1992,27 +1992,27 @@
   "1233493": {
     "name": "עומר הנדסה",
     "pe_base": 20.78,
-    "price_base": 1703.0
+    "price_base": 1695.0
   },
   "1119478": {
     "name": "עזריאלי קבוצה",
     "pe_base": 26.75,
-    "price_base": 38570.0
+    "price_base": 38750.0
   },
   "397018": {
     "name": "עין שלישית",
     "pe_base": "הפסד",
-    "price_base": 476.4
+    "price_base": 472.4
   },
   "625012": {
     "name": "עלבד",
     "pe_base": 7.73,
-    "price_base": 2995.0
+    "price_base": 2994.0
   },
   "1173145": {
     "name": "עלמא יסודות",
     "pe_base": 30.82,
-    "price_base": 1805.0
+    "price_base": 1778.0
   },
   "1243245": {
     "name": "עלמדב ריל",
@@ -2022,7 +2022,7 @@
   "1094390": {
     "name": "עמיעד",
     "pe_base": "הפסד",
-    "price_base": 690.0
+    "price_base": 692.7
   },
   "1092204": {
     "name": "עמיר שיווק",
@@ -2032,32 +2032,32 @@
   "1232008": {
     "name": "עמל הולדינגס",
     "pe_base": 15.28,
-    "price_base": 1456.0
+    "price_base": 1454.0
   },
   "1188200": {
     "name": "עמרם",
     "pe_base": 11.44,
-    "price_base": 4095.0
+    "price_base": 4075.0
   },
   "1120161": {
     "name": "ערך פיננסים-ש",
     "pe_base": "הפסד",
-    "price_base": 153.0
+    "price_base": 153.4
   },
   "312017": {
     "name": "עשות",
     "pe_base": 24.43,
-    "price_base": 6241.0
+    "price_base": 6318.0
   },
   "1186527": {
     "name": "פאי סיאם",
     "pe_base": 5.98,
-    "price_base": 4462.0
+    "price_base": 4450.0
   },
   "1236736": {
     "name": "פאלו אלטו",
     "pe_base": 984.29,
-    "price_base": 114820.0
+    "price_base": 114770.0
   },
   "1173855": {
     "name": "פוטומיין",
@@ -2067,32 +2067,32 @@
   "745018": {
     "name": "פוליגון",
     "pe_base": 13.72,
-    "price_base": 5200.0
+    "price_base": 5243.0
   },
   "1170216": {
     "name": "פולירם",
     "pe_base": 24.11,
-    "price_base": 805.4
+    "price_base": 805.2
   },
   "1173434": {
     "name": "פוםוום",
     "pe_base": "הפסד",
-    "price_base": 39.0
+    "price_base": 38.7
   },
   "662577": {
     "name": "פועלים",
     "pe_base": 11.15,
-    "price_base": 8136.0
+    "price_base": 8147.0
   },
   "1087022": {
     "name": "פוקס",
     "pe_base": 18.54,
-    "price_base": 30750.0
+    "price_base": 31000.0
   },
   "256016": {
     "name": "פורמולה מערכות",
     "pe_base": 2.77,
-    "price_base": 36220.0
+    "price_base": 36300.0
   },
   "199018": {
     "name": "פורסייט",
@@ -2102,42 +2102,42 @@
   "1100007": {
     "name": "פז אנרגיה",
     "pe_base": 15.08,
-    "price_base": 84890.0
+    "price_base": 84520.0
   },
   "756015": {
     "name": "פטרוכימיים",
     "pe_base": 7.81,
-    "price_base": 576.8
+    "price_base": 577.1
   },
   "763011": {
     "name": "פיבי",
     "pe_base": 10.69,
-    "price_base": 31410.0
+    "price_base": 31470.0
   },
   "412015": {
     "name": "פייטון",
     "pe_base": 15.64,
-    "price_base": 4999.0
+    "price_base": 4987.0
   },
   "1180876": {
     "name": "פיימנט",
     "pe_base": 11.27,
-    "price_base": 553.4
+    "price_base": 530.2
   },
   "1172360": {
     "name": "פינרג'י",
     "pe_base": "הפסד",
-    "price_base": 309.1
+    "price_base": 309.3
   },
   "1091685": {
     "name": "פיסיבי טכנ",
     "pe_base": 25.56,
-    "price_base": 1234.0
+    "price_base": 1246.0
   },
   "382010": {
     "name": "פיקס סולושנז",
     "pe_base": 19.11,
-    "price_base": 590.7
+    "price_base": 590.0
   },
   "1109917": {
     "name": "פלאזה סנטר -ס",
@@ -2157,12 +2157,12 @@
   "1081603": {
     "name": "פלסאון תעשיות",
     "pe_base": 8.24,
-    "price_base": 13730.0
+    "price_base": 13720.0
   },
   "1176700": {
     "name": "פלסאנמור",
     "pe_base": "הפסד",
-    "price_base": 711.9
+    "price_base": 723.0
   },
   "727016": {
     "name": "פלסטו קרגל",
@@ -2177,27 +2177,27 @@
   "644013": {
     "name": "פלרם",
     "pe_base": 8.18,
-    "price_base": 4433.0
+    "price_base": 4416.0
   },
   "315010": {
     "name": "פמס",
     "pe_base": 10.48,
-    "price_base": 14720.0
+    "price_base": 14590.0
   },
   "1247253": {
     "name": "פסטרנק שהם",
     "pe_base": 124725.0,
-    "price_base": 1195.0
+    "price_base": 1193.0
   },
   "1176908": {
     "name": "פסיירקס ביו-טק",
     "pe_base": "הפסד",
-    "price_base": 76.7
+    "price_base": 74.3
   },
   "1237031": {
     "name": "פרודלים השקעות",
     "pe_base": 63.77,
-    "price_base": 442.3
+    "price_base": 441.8
   },
   "1230655": {
     "name": "פרוספקט",
@@ -2207,12 +2207,12 @@
   "1188622": {
     "name": "פרופדו",
     "pe_base": "הפסד",
-    "price_base": 2379.0
+    "price_base": 2395.0
   },
   "1083484": {
     "name": "פרטנר",
     "pe_base": 22.26,
-    "price_base": 3884.0
+    "price_base": 3857.0
   },
   "1102219": {
     "name": "פרידנזון",
@@ -2222,12 +2222,12 @@
   "1095819": {
     "name": "פריון נטוורק",
     "pe_base": "הפסד",
-    "price_base": 2702.0
+    "price_base": 2726.0
   },
   "328013": {
     "name": "פריורטק",
     "pe_base": 24.02,
-    "price_base": 28590.0
+    "price_base": 28550.0
   },
   "1174457": {
     "name": "פריים אנרג'י",
@@ -2237,7 +2237,7 @@
   "1175496": {
     "name": "פרימוטק",
     "pe_base": 7.12,
-    "price_base": 1341.0
+    "price_base": 1332.0
   },
   "765016": {
     "name": "פרפל ביוטק",
@@ -2252,22 +2252,22 @@
   "1102128": {
     "name": "פרשקובסקי",
     "pe_base": 12.88,
-    "price_base": 13400.0
+    "price_base": 13260.0
   },
   "1143429": {
     "name": "פתאל החזקות",
     "pe_base": 895.52,
-    "price_base": 67450.0
+    "price_base": 67790.0
   },
   "730010": {
     "name": "צור",
     "pe_base": 4.64,
-    "price_base": 1298.0
+    "price_base": 1294.0
   },
   "1102532": {
     "name": "צילו-בלו",
     "pe_base": 8.56,
-    "price_base": 313.5
+    "price_base": 315.2
   },
   "425017": {
     "name": "צרפתי",
@@ -2277,32 +2277,32 @@
   "1244581": {
     "name": "קאנדו דרונס",
     "pe_base": "הפסד",
-    "price_base": 362.8
+    "price_base": 352.9
   },
   "1176205": {
     "name": "קבוצת אקרשטיין",
     "pe_base": 45.01,
-    "price_base": 710.1
+    "price_base": 714.7
   },
   "1242528": {
     "name": "קבוצת תדהר",
     "pe_base": 37.04,
-    "price_base": 15230.0
+    "price_base": 15200.0
   },
   "386011": {
     "name": "קווינקו",
     "pe_base": 7.04,
-    "price_base": 789.9
+    "price_base": 795.0
   },
   "1083955": {
     "name": "קווליטאו",
     "pe_base": 23.0,
-    "price_base": 33720.0
+    "price_base": 33700.0
   },
   "1085208": {
     "name": "קומפיוגן",
     "pe_base": 6.13,
-    "price_base": 745.0
+    "price_base": 737.5
   },
   "1182260": {
     "name": "קונטיניואל-ש",
@@ -2312,32 +2312,32 @@
   "1175934": {
     "name": "קיסטון אינפרא",
     "pe_base": 5.62,
-    "price_base": 2090.0
+    "price_base": 2076.0
   },
   "797035": {
     "name": "קליל",
     "pe_base": 17.76,
-    "price_base": 17170.0
+    "price_base": 17300.0
   },
   "1094119": {
     "name": "קמהדע",
     "pe_base": 20.25,
-    "price_base": 2496.0
+    "price_base": 2494.0
   },
   "1095264": {
     "name": "קמטק",
     "pe_base": 174.08,
-    "price_base": 41390.0
+    "price_base": 41320.0
   },
   "106013": {
     "name": "קנדה גלובל",
-    "pe_base": 8.06,
-    "price_base": 997.0
+    "pe_base": 7.87,
+    "price_base": 993.7
   },
   "1134139": {
     "name": "קנון",
     "pe_base": 26.42,
-    "price_base": 19150.0
+    "price_base": 19130.0
   },
   "1096007": {
     "name": "קנזון-ש",
@@ -2347,7 +2347,7 @@
   "280016": {
     "name": "קסטרו",
     "pe_base": 31.66,
-    "price_base": 15480.0
+    "price_base": 15490.0
   },
   "1097146": {
     "name": "קפיטל פוינט",
@@ -2357,62 +2357,62 @@
   "1210152": {
     "name": "קרדן ישראל",
     "pe_base": 12.35,
-    "price_base": 548.3
+    "price_base": 544.8
   },
   "1118447": {
     "name": "קרדן נדלן",
     "pe_base": 89.73,
-    "price_base": 492.9
+    "price_base": 483.0
   },
   "621011": {
     "name": "קרור",
     "pe_base": 7.0,
-    "price_base": 8000.0
+    "price_base": 7984.0
   },
   "1123850": {
     "name": "קרסו מוטורס",
     "pe_base": 9.89,
-    "price_base": 2654.0
+    "price_base": 2670.0
   },
   "1187962": {
     "name": "קרסו נדלן",
     "pe_base": "הפסד",
-    "price_base": 3371.0
+    "price_base": 3362.0
   },
   "413013": {
     "name": "קשרי תעופה",
     "pe_base": 11.31,
-    "price_base": 1799.0
+    "price_base": 1803.0
   },
   "393017": {
     "name": "ראלקו",
     "pe_base": 4.26,
-    "price_base": 3971.0
+    "price_base": 4044.0
   },
   "1179993": {
     "name": "רב בריח",
     "pe_base": 33.78,
-    "price_base": 139.2
+    "price_base": 137.9
   },
   "526012": {
     "name": "רבד",
     "pe_base": "הפסד",
-    "price_base": 900.0
+    "price_base": 900.2
   },
   "1098565": {
     "name": "רבוע נדלן",
     "pe_base": 6.28,
-    "price_base": 32070.0
+    "price_base": 32100.0
   },
   "1103878": {
     "name": "רבל",
     "pe_base": 9.66,
-    "price_base": 146.0
+    "price_base": 146.2
   },
   "1226885": {
     "name": "רגא שרותים",
     "pe_base": 7.85,
-    "price_base": 96.4
+    "price_base": 95.9
   },
   "266015": {
     "name": "רובוגרופ",
@@ -2422,27 +2422,27 @@
   "539015": {
     "name": "רוטשטיין",
     "pe_base": 8.11,
-    "price_base": 6634.0
+    "price_base": 6578.0
   },
   "1242726": {
     "name": "רוסטיק בייקרי",
     "pe_base": 14.37,
-    "price_base": 1868.0
+    "price_base": 1865.0
   },
   "1171529": {
     "name": "רותם שני",
     "pe_base": 29.54,
-    "price_base": 2870.0
+    "price_base": 2883.0
   },
   "1098920": {
     "name": "ריט 1",
     "pe_base": 10.23,
-    "price_base": 2121.0
+    "price_base": 2140.0
   },
   "1162775": {
     "name": "ריט אזורים ליוי",
     "pe_base": 17.9,
-    "price_base": 603.4
+    "price_base": 604.0
   },
   "1173723": {
     "name": "ריטייל מיינדס-ש",
@@ -2452,27 +2452,27 @@
   "1175488": {
     "name": "ריטיילורס",
     "pe_base": 25.04,
-    "price_base": 1768.0
+    "price_base": 1762.0
   },
   "673012": {
     "name": "ריי טי אל וי",
     "pe_base": "הפסד",
-    "price_base": 51.7
+    "price_base": 48.4
   },
   "1172527": {
     "name": "רייזור",
     "pe_base": "הפסד",
-    "price_base": 548.9
+    "price_base": 531.6
   },
   "1178722": {
     "name": "רימון",
     "pe_base": 93.72,
-    "price_base": 14060.0
+    "price_base": 13880.0
   },
   "1080456": {
     "name": "רימוני",
     "pe_base": 11.23,
-    "price_base": 3601.0
+    "price_base": 3662.0
   },
   "1090943": {
     "name": "רם און",
@@ -2482,22 +2482,22 @@
   "1104249": {
     "name": "רמי לוי",
     "pe_base": 21.49,
-    "price_base": 33930.0
+    "price_base": 33900.0
   },
   "1235001": {
     "name": "רמי לוי נדל''ן",
     "pe_base": 14.85,
-    "price_base": 3677.0
+    "price_base": 3663.0
   },
   "1199645": {
     "name": "רנט איט",
     "pe_base": 27.9,
-    "price_base": 1191.0
+    "price_base": 1194.0
   },
   "1143619": {
     "name": "רני צים",
     "pe_base": 9.68,
-    "price_base": 476.5
+    "price_base": 473.2
   },
   "769026": {
     "name": "רפק",
@@ -2512,37 +2512,37 @@
   "1081009": {
     "name": "רקח",
     "pe_base": "הפסד",
-    "price_base": 1130.0
+    "price_base": 1131.0
   },
   "1138379": {
     "name": "שגריר",
     "pe_base": 10.9,
-    "price_base": 1350.0
+    "price_base": 1351.0
   },
   "341016": {
     "name": "שדה נדל''ן",
     "pe_base": "הפסד",
-    "price_base": 748.9
+    "price_base": 732.8
   },
   "1188242": {
     "name": "שוב אנרגיה",
     "pe_base": "הפסד",
-    "price_base": 403.4
+    "price_base": 403.2
   },
   "1207968": {
     "name": "שובל",
     "pe_base": 19.06,
-    "price_base": 698.9
+    "price_base": 706.0
   },
   "1082007": {
     "name": "שוהם ביזנס",
     "pe_base": 6.66,
-    "price_base": 741.0
+    "price_base": 737.8
   },
   "777037": {
     "name": "שופרסל",
     "pe_base": 14.83,
-    "price_base": 3667.0
+    "price_base": 3658.0
   },
   "746016": {
     "name": "שטראוס",
@@ -2552,67 +2552,67 @@
   "249011": {
     "name": "שיח מדיקל",
     "pe_base": 12.8,
-    "price_base": 278.9
+    "price_base": 271.9
   },
   "1081942": {
     "name": "שיכון ובינוי",
     "pe_base": "הפסד",
-    "price_base": 1814.0
+    "price_base": 1817.0
   },
   "1158161": {
     "name": "שירותי בנק אוטו",
     "pe_base": 21.85,
-    "price_base": 2136.0
+    "price_base": 2115.0
   },
   "1176239": {
     "name": "שמיים",
     "pe_base": "הפסד",
-    "price_base": 160.2
+    "price_base": 160.8
   },
   "634030": {
     "name": "שמן נדלן",
     "pe_base": 18.32,
-    "price_base": 1510.0
+    "price_base": 1485.0
   },
   "1080837": {
     "name": "שניב",
     "pe_base": 11.95,
-    "price_base": 899.0
+    "price_base": 899.1
   },
   "1103571": {
     "name": "שנפ",
     "pe_base": 7.75,
-    "price_base": 1938.0
+    "price_base": 1940.0
   },
   "1133875": {
     "name": "שפיר הנדסה",
     "pe_base": 45.34,
-    "price_base": 4294.0
+    "price_base": 4281.0
   },
   "1092725": {
     "name": "שרין טכנו",
     "pe_base": "הפסד",
-    "price_base": 40.3
+    "price_base": 40.2
   },
   "1082726": {
     "name": "תאת טכנו",
     "pe_base": 22.21,
-    "price_base": 11520.0
+    "price_base": 11400.0
   },
   "142018": {
     "name": "תדאה",
     "pe_base": "הפסד",
-    "price_base": 533.9
+    "price_base": 534.1
   },
   "258012": {
     "name": "תדיראן גרופ",
     "pe_base": 71.61,
-    "price_base": 19840.0
+    "price_base": 20000.0
   },
   "1129493": {
     "name": "תומר אנרגיה",
     "pe_base": 17.75,
-    "price_base": 1602.0
+    "price_base": 1604.0
   },
   "1181932": {
     "name": "תומר מזון",
@@ -2622,22 +2622,22 @@
   "1175611": {
     "name": "תורפז",
     "pe_base": 84.44,
-    "price_base": 5966.0
+    "price_base": 5948.0
   },
   "796011": {
     "name": "תיא השקעות",
-    "pe_base": 141.24,
+    "pe_base": 140.81,
     "price_base": 4880.0
   },
   "1105022": {
     "name": "תיגבור קבוצה",
     "pe_base": 13.95,
-    "price_base": 5198.0
+    "price_base": 5146.0
   },
   "1173871": {
     "name": "תיגי",
     "pe_base": "הפסד",
-    "price_base": 326.5
+    "price_base": 322.1
   },
   "1084367": {
     "name": "תיקון עולם קנ-ש",
@@ -2647,12 +2647,12 @@
   "1097229": {
     "name": "תמיס",
     "pe_base": "הפסד",
-    "price_base": 1347.0
+    "price_base": 1345.0
   },
   "1141357": {
     "name": "תמר פטרוליום",
     "pe_base": 16.78,
-    "price_base": 2780.0
+    "price_base": 2767.0
   },
   "290023": {
     "name": "תעוזה",
