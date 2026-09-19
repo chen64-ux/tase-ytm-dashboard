@@ -64,6 +64,12 @@ PROMPT_TEMPLATE = """כתוב ניתוח שבועי אנליטי לשוק ההו
 המשפט עצמו (למשל "לפי דיווח ב-Yahoo Finance"), אבל לא בשום תחביר של
 תגית או קוד.
 
+חשוב לגבי קיצורים עבריים בתוך הטקסט (כמו אג"ח, ש"ח, ארה"ב וכדומה):
+מכיוון שהתשובה כולה היא JSON, אסור להשתמש בגרש ASCII רגיל (") בתוך
+ערכי המחרוזת - זה שובר את מבנה ה-JSON. במקום זה יש להשתמש בתו הגרשיים
+העברי התקני ״ (gershayim, לא מרכאות רגילות) לכל קיצור כזה, למשל אג״ח,
+ש״ח, ארה״ב - לעולם לא אג"ח עם מרכאות ASCII.
+
 השב אך ורק ב-JSON תקני בפורמט הבא, בלי שום טקסט, כותרת, משפט הקדמה
 (למשל "הנה הניתוח" או "עכשיו אכתוב את התשובה"), או ```json לפני/אחרי -
 התגובה שלך חייבת להתחיל ב-{{ ולהסתיים ב-}} ולא בשום תו אחר:
@@ -102,6 +108,51 @@ def strip_citation_markup(text):
     return CITE_TAG_RE.sub("", text)
 
 
+FIELD_ORDER = ["summary", "past_week_events", "notable_stocks_il", "notable_stocks_us", "outlook_next_week"]
+
+
+def _extract_fields_by_boundary(cleaned):
+    """שיטת חילוץ סלחנית יותר, לשימוש רק כש-json.loads נכשל - עוקפת
+    לגמרי את בעיית מרכאות ASCII גולמיות (") בתוך ערכי המחרוזת (נצפה
+    בפועל 19/09/2026: Claude ממשיך להשתמש בקיצורים עבריים כמו אג"ח/
+    ש"ח/ארה"ב עם מרכאות רגילות בתוך הטקסט, למרות ההנחיה בפרומפט לא
+    לעשות זאת - זה "סוגר" את מחרוזת ה-JSON מוקדם מדי מבחינת הפרסר,
+    ו-strict=False לא עוזר כי זו לא בעיית תו-בקרה). במקום להסתמך על
+    איתור מרכאות תקין בכלל, מאתרת את גבולות השדות לפי שמות המפתחות
+    הקבועים והידועים מראש (5 שדות, סדר קבוע) וחותכת את הטקסט ביניהם -
+    כך מרכאות פנימיות בתוך הערך עצמו לא משפיעות. מחזירה dict או None
+    אם המבנה לא תואם בכלל (למשל שדה חסר) - במקרה כזה נופלים חזרה
+    לשגיאה הרגילה."""
+    result = {}
+    for i, key in enumerate(FIELD_ORDER):
+        key_marker = f'"{key}"'
+        key_idx = cleaned.find(key_marker)
+        if key_idx == -1:
+            return None
+        colon_idx = cleaned.find(":", key_idx + len(key_marker))
+        if colon_idx == -1:
+            return None
+        value_start = cleaned.find('"', colon_idx)
+        if value_start == -1:
+            return None
+        value_start += 1
+
+        if i + 1 < len(FIELD_ORDER):
+            next_marker = f'"{FIELD_ORDER[i + 1]}"'
+            next_key_idx = cleaned.find(next_marker, value_start)
+            if next_key_idx == -1:
+                return None
+            value_end = cleaned.rfind('"', value_start, next_key_idx)
+        else:
+            close_brace_idx = cleaned.rfind("}")
+            value_end = cleaned.rfind('"', value_start, close_brace_idx if close_brace_idx != -1 else len(cleaned))
+
+        if value_end == -1 or value_end <= value_start:
+            return None
+        result[key] = cleaned[value_start:value_end]
+    return result
+
+
 def parse_json_response(raw_text):
     cleaned = re.sub(r"^```json\s*|\s*```$", "", raw_text.strip())
 
@@ -125,6 +176,16 @@ def parse_json_response(raw_text):
         # לזה במפורש - בדיוק בשביל טקסט "כמעט-JSON" שנוצר ע"י מודל שפה.
         return json.loads(cleaned, strict=False)
     except json.JSONDecodeError as e:
+        # לפני שמוותרים - מנסים שיטת חילוץ סלחנית יותר, שלא מסתמכת על
+        # מרכאות תקינות בכלל (ראה _extract_fields_by_boundary).
+        lenient = _extract_fields_by_boundary(cleaned)
+        if lenient is not None:
+            print(
+                "  ⚠️  JSON לא תקני (כנראה מרכאות \" לא-escaped בתוך הטקסט, "
+                "למשל קיצור עברי כמו אג\"ח) - שוחזר בהצלחה עם שיטת חילוץ חלופית."
+            )
+            return lenient
+
         # כדי שכשל עתידי יהיה ניתן לאבחון ישירות מהלוג (stdout/stderr
         # שנלכדים ע"י run_weekly_review.py) בלי צורך לחפור בממשק
         # GitHub Actions - מדפיסים תחילת הטקסט הגולמי שהתקבל בפועל.
