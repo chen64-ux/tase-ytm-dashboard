@@ -85,6 +85,13 @@ def fetch_yahoo_range(ticker, start_date, end_date):
     מחזיר (start_close, end_close, error). שולף חלון רחב יותר מהטווח
     המבוקש (ימים נוספים משני הצדדים) כדי להתמודד עם סופי שבוע/חגים
     שאין בהם מסחר, ובוחר את מחיר הסגירה הקרוב ביותר לכל קצה.
+
+    הגנה חשובה (נוספה 19/09/2026 - "ת"א בנקים" הציג 0% במקום שינוי
+    אמיתי): אם הנקודה שנבחרה כ"תחילת שבוע" והנקודה שנבחרה כ"סוף שבוע"
+    הן בפועל אותו יום מסחר בדיוק - למשל כי לטיקר הזה יש ב-Yahoo נתונים
+    דלילים/לא מעודכנים וכל הנקודות בטווח מתכנסות לנקודה יחידה (או
+    כמעט יחידה) - זו לא באמת "שינוי שבועי של 0%", אלא כשל שליפה
+    שמתחפש לנתון תקין. מטופל כשגיאה מפורשת בשורה בדשבורד, לא כ-0% דומם.
     """
     period1 = _to_ts(start_date) - 5 * 86400
     period2 = _to_ts(end_date) + 2 * 86400
@@ -107,11 +114,22 @@ def fetch_yahoo_range(ticker, start_date, end_date):
              for ts, c in zip(timestamps, closes) if c is not None]
     if not pairs:
         return None, None, "אין נתונים בטווח המבוקש"
+    if len(pairs) < 2:
+        return None, None, (
+            f"נמצאה רק נקודת נתונים אחת בטווח ({pairs[0][0]}) - ייתכן שהטיקר "
+            f"לא פעיל/לא מתעדכן ב-Yahoo"
+        )
     start_pairs = [p for p in pairs if p[0] <= end_date]
     if not start_pairs:
         start_pairs = pairs
-    start_val = min(start_pairs, key=lambda p: abs((p[0] - start_date).days))[1]
-    end_val = min(pairs, key=lambda p: abs((p[0] - end_date).days))[1]
+    start_date_matched, start_val = min(start_pairs, key=lambda p: abs((p[0] - start_date).days))
+    end_date_matched, end_val = min(pairs, key=lambda p: abs((p[0] - end_date).days))
+    if start_date_matched == end_date_matched:
+        return None, None, (
+            f"נקודת ההתחלה והסוף שנמצאו הן אותו יום מסחר בדיוק ({start_date_matched}) "
+            f"מתוך {len(pairs)} נקודות בטווח - נתוני הטיקר ב-Yahoo כנראה דלילים מדי "
+            f"לחישוב שינוי שבועי אמין"
+        )
     return start_val, end_val, None
 
 
