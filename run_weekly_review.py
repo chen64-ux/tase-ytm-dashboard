@@ -34,6 +34,10 @@ WEEKLY_MACRO_PATH = _REPO_DIR / "weekly_macro.json"
 WEEKLY_CPI_ISRAEL_PATH = _REPO_DIR / "weekly_cpi_israel.json"
 WEEKLY_REVIEW_JSON_PATH = _REPO_DIR / "weekly_review.json"
 WEEKLY_ANALYSIS_JSON_PATH = _REPO_DIR / "weekly_analysis.json"
+# נכתב מקומית ע"י run_daily_local.py (ביזפורטל, כי Yahoo לא אמין
+# לטיקר TA-BANKS.TA - ראה fetch_pe.fetch_index_weekly_change). אופציונלי:
+# אם חסר, fetch_weekly_review.py פשוט יציג שגיאת Yahoo כרגיל בלי override.
+BANKS_INDEX_OVERRIDE_PATH = _REPO_DIR / "bizportal_banks_index.json"
 
 LOG_PATH = _REPO_DIR / "weekly_review_log.txt"
 
@@ -75,6 +79,11 @@ def main():
             log(f"⚠️  שגיאה בקריאת {WEEKLY_CPI_ISRAEL_PATH.name}: {e}")
     else:
         log(f"ℹ️  לא נמצא {WEEKLY_CPI_ISRAEL_PATH.name} - מדד המחירים לישראל לא יופיע השבוע.")
+
+    if BANKS_INDEX_OVERRIDE_PATH.exists():
+        cmd += ["--banks-index-override", str(BANKS_INDEX_OVERRIDE_PATH)]
+    else:
+        log(f"ℹ️  לא נמצא {BANKS_INDEX_OVERRIDE_PATH.name} - אם Yahoo ייכשל ל'ת\"א בנקים' תוצג שגיאה רגילה בלי override.")
 
     log(f"מריץ את fetch_weekly_review.py לטווח {start_date} - {end_date}...")
     result = subprocess.run(cmd, cwd=str(_REPO_DIR), capture_output=True, text=True)
