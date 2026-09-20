@@ -22,14 +22,34 @@ run_daily_local.py
 2. אחרי כל merge - בדיקה מפורשת שהתוכן בפועל תואם למה שהריצה הזו
    יצרה, ואם לא - "כפיית" הגרסה המקומית עם commit מתקן. כך גם אם
    הדרך הראשונה נכשלת מסיבה כלשהי, יש רשת ביטחון.
+
+בסוף כל ריצה יש גם גיבוי נוסף, לא-קריטי ולא תלוי בגיט, לתיקיית
+OneDrive מקומית (ראה ONEDRIVE_BACKUP_DIR) - עותק מראה (mirror) של כל
+התיקייה חוץ מ-.git/__pycache__/downloads.
+
+שלב נוסף (שלב 2/5) שולף מקומית מביזפורטל את השינוי השבועי של מדד
+ת"א בנקים (ראה BIZPORTAL_BANKS_INDEX_ID/fetch_banks_index_override) -
+כי ל-Yahoo אין נתונים אמינים לטיקר הזה - וכותב אותו ל-
+bizportal_banks_index.json, שנקרא בהמשך ע"י fetch_weekly_review.py
+דרך weekly-review-update.yml בענן.
+
+שלב נוסף (שלב 3/5, מ-20/09/2026) שולף מקומית מהלמ"ס את מדד המחירים
+לצרכן (ראה fetch_cpi_israel.py) וכותב אותו ל-weekly_cpi_israel.json -
+עד עכשיו הקובץ הזה עודכן רק ידנית ונשאר תקוע עם נתוני הדוגמה
+המקוריים מאז הקמת הפרויקט, כך שטבלת המאקרו בסקירה השבועית הציגה כל
+שבוע בדיוק אותם נתונים ישנים.
 """
 
 import datetime
+import json
 import os
 import pathlib
 import subprocess
 import sys
 import traceback
+
+import fetch_cpi_israel
+import fetch_pe
 
 # כש-Task Scheduler מריץ את הסקריפט (ללא חלון קונסולה), ה-stdout
 # לפעמים לא תומך ב-UTF-8 (עברית/אימוג'ים) ו-print() רגיל יכול לקרוס
@@ -48,10 +68,32 @@ WRAPPER_LOG_PATH = _REPO_DIR / "run_daily_local_log.txt"
 GITATTRIBUTES_PATH = _REPO_DIR / ".gitattributes"
 GIT_BRANCH = "main"
 
+# מדד ת"א בנקים ב-Yahoo (TA-BANKS.TA) מחזיר נתונים דלילים מדי (ראה
+# fetch_weekly_review.py, תוקן 19/09/2026) - נשלף כאן מקומית מביזפורטל
+# (עמוד index_id=751) ונכתב לקובץ קטן, כדי שfetch_weekly_review.py
+# בענן (weekly-review-update.yml) יוכל להשתמש בו כ-override כשYahoo
+# נכשל לספק נתון אמין. לא קריטי: כשל כאן רק נרשם ליומן.
+BIZPORTAL_BANKS_INDEX_ID = "751"
+BANKS_INDEX_OVERRIDE_PATH = _REPO_DIR / "bizportal_banks_index.json"
+
+# מדד המחירים לצרכן (הלמ"ס) - נשלף כאן מקומית (חסום מ-GitHub Actions,
+# כמו ביזפורטל ובנק ישראל - ראה fetch_cpi_israel.py) ונכתב לקובץ
+# הידני שrun_weekly_review.py כבר יודע לקרוא. עד 20/09/2026 הקובץ הזה
+# עודכן רק ביד ונשאר עם נתוני הדוגמה המקוריים ללא שינוי.
+WEEKLY_CPI_ISRAEL_PATH = _REPO_DIR / "weekly_cpi_israel.json"
+
 # הקבצים שריצת run_daily_update.py משנה בפועל - רק אלה נדחפים.
 # holdings.xlsx / market_pe_base.json / sector_mapping.json וכו' לא
-# נגעים כאן - אלה מתעדכנים בתהליכים נפרדים משלהם.
-FILES_TO_PUSH = ["ytm_computed.xlsx", "docs/ytm_dashboard.html", "run_log.txt"]
+# נגעים כאן - אלה מתעדכנים בתהליכים נפרדים משלהם. bizportal_banks_index.json
+# ו-weekly_cpi_israel.json נכתבים ונדחפים כאן ישירות (לא ע"י
+# run_daily_update.py), אבל זה עדיין המקום הנכון כדי שייכללו באותו commit.
+FILES_TO_PUSH = [
+    "ytm_computed.xlsx",
+    "docs/ytm_dashboard.html",
+    "run_log.txt",
+    "bizportal_banks_index.json",
+    "weekly_cpi_israel.json",
+]
 
 # קבצים שנוצרים אוטומטית מחדש בכל ריצה (לא נערכים ידנית) - בהתנגשות
 # מול הענן, הגרסה מהריצה האחרונה תמיד מנצחת. run_log.txt מקבל
@@ -61,6 +103,14 @@ GITATTRIBUTES_LINES = [
     "docs/ytm_dashboard.html merge=ours",
     "run_log.txt merge=union",
 ]
+
+# גיבוי נוסף (לא git) לתיקיית OneDrive שכבר מסונכרנת במחשב הזה - לא
+# תחליף ל-GitHub (שהוא ה-source of truth וממשיך להיות מנגנון ה-push
+# העיקרי), אלא רשת ביטחון עצמאית שלא תלויה בגיט בכלל. .git עצמו לא
+# מגובה כאן (הוא כבר מגובה דרך GitHub, וסנכרון OneDrive על תיקיית
+# .git פעילה עלול להתנגש עם כתיבות git ולגרום לשחיתות).
+ONEDRIVE_BACKUP_DIR = pathlib.Path(r"C:\Users\chen\OneDrive\tase-ytm-dashboard-backup")
+ONEDRIVE_BACKUP_EXCLUDE_DIRS = [".git", "__pycache__", "downloads"]
 
 
 def log_wrapper_event(text: str) -> None:
@@ -212,17 +262,95 @@ def git_commit_and_push() -> bool:
     return True
 
 
+def fetch_banks_index_override() -> None:
+    """שולף את השינוי השבועי של מדד ת"א בנקים מביזפורטל (עובד רק
+    מהמחשב המקומי - חסום מ-GitHub Actions) וכותב אותו ל-
+    bizportal_banks_index.json. לא קריטי: כשל כאן רק נרשם ליומן,
+    ואם הקובץ כבר קיים מריצה קודמת הוא פשוט נשאר כמו שהוא."""
+    pct, err = fetch_pe.fetch_index_weekly_change(BIZPORTAL_BANKS_INDEX_ID)
+    if err:
+        log_wrapper_event(f"⚠️  שליפת מדד ת\"א בנקים מביזפורטל נכשלה: {err}")
+        return
+    data = {
+        "pct": pct,
+        "as_of": datetime.date.today().isoformat(),
+        "source": f"bizportal index {BIZPORTAL_BANKS_INDEX_ID}",
+    }
+    with open(BANKS_INDEX_OVERRIDE_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"✅ מדד ת\"א בנקים (ביזפורטל): {pct * 100:+.2f}% שבועי.")
+
+
+def update_weekly_cpi_israel() -> None:
+    """שולף מהלמ"ס (עובד רק מהמחשב המקומי - חסום מ-GitHub Actions) את
+    השינוי החודשי/שנתי העדכני של מדד המחירים לצרכן, וכותב אותו ל-
+    weekly_cpi_israel.json - עד עכשיו הקובץ הזה עודכן רק ידנית ונשאר
+    תקוע עם נתוני הדוגמה המקוריים. לא קריטי: כשל כאן רק נרשם ליומן,
+    ואם הקובץ כבר קיים מריצה קודמת הוא פשוט נשאר כמו שהוא."""
+    result, err = fetch_cpi_israel.fetch_and_summarize()
+    if err:
+        log_wrapper_event(f"⚠️  עדכון מדד המחירים לצרכן (למ\"ס) נכשל: {err}")
+        return
+    with open(WEEKLY_CPI_ISRAEL_PATH, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print(f"✅ מדד המחירים לצרכן (למ\"ס): {result['value']} - {result['note']}")
+
+
+def backup_to_onedrive() -> None:
+    """מראה (mirror) את כל תיקיית הפרויקט לתיקיית הגיבוי ב-OneDrive,
+    חוץ מ-.git/__pycache__/downloads. לא קריטי: כשל כאן רק נרשם ליומן
+    ולא מפיל את שאר הריצה - זה שכבת גיבוי נוספת, לא הפייפליין העיקרי."""
+    if not ONEDRIVE_BACKUP_DIR.exists():
+        log_wrapper_event(
+            f"⚠️  תיקיית הגיבוי {ONEDRIVE_BACKUP_DIR} לא נמצאה - מדלג על גיבוי ה-OneDrive."
+        )
+        return
+
+    args = ["robocopy", str(_REPO_DIR), str(ONEDRIVE_BACKUP_DIR), "/MIR"]
+    for d in ONEDRIVE_BACKUP_EXCLUDE_DIRS:
+        args += ["/XD", str(_REPO_DIR / d)]
+    args += ["/R:1", "/W:1", "/NFL", "/NDL", "/NP"]
+
+    result = subprocess.run(args, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    # robocopy: 0-7 = הצלחה (סוגי שינוי שונים), 8+ = כשל אמיתי.
+    if result.returncode >= 8:
+        log_wrapper_event(
+            f"⚠️  גיבוי ל-OneDrive נכשל (robocopy קוד יציאה {result.returncode})\n"
+            f"--- stdout ---\n{result.stdout}\n--- stderr ---\n{result.stderr}"
+        )
+    else:
+        print(f"✅ גובה ל-OneDrive בהצלחה (robocopy קוד יציאה {result.returncode}).")
+
+
 def main():
     ensure_git_merge_config()
 
-    step("שלב 0/2: מושך עדכונים אחרונים מ-GitHub")
+    step("שלב 0/5: מושך עדכונים אחרונים מ-GitHub")
     pull_latest_before_run()
 
-    step("שלב 1/2: מריץ את run_daily_update.py המקומי")
+    step("שלב 1/5: מריץ את run_daily_update.py המקומי")
     run_daily_update()
 
-    step("שלב 2/2: דוחף את התוצאה ל-GitHub")
+    step("שלב 2/5: שולף מדד ת\"א בנקים מביזפורטל (עבור הסקירה השבועית)")
+    try:
+        fetch_banks_index_override()
+    except Exception as exc:
+        log_wrapper_event(f"⚠️  שליפת מדד ת\"א בנקים נכשלה עם חריגה: {exc}")
+
+    step("שלב 3/5: מעדכן מדד המחירים לצרכן מהלמ\"ס (עבור הסקירה השבועית)")
+    try:
+        update_weekly_cpi_israel()
+    except Exception as exc:
+        log_wrapper_event(f"⚠️  עדכון מדד המחירים לצרכן נכשל עם חריגה: {exc}")
+
+    step("שלב 4/5: דוחף את התוצאה ל-GitHub")
     git_commit_and_push()
+
+    step("שלב 5/5: מגבה ל-OneDrive")
+    try:
+        backup_to_onedrive()
+    except Exception as exc:
+        log_wrapper_event(f"⚠️  גיבוי ל-OneDrive נכשל עם חריגה: {exc}")
 
     print("\n🎉 הריצה היומית המקומית הושלמה.")
 
