@@ -277,7 +277,14 @@ def generate(start_date: str, end_date: str) -> dict:
             "tools": [{"type": "web_search_20250305", "name": "web_search"}],
             "messages": [{"role": "user", "content": prompt}],
         },
-        timeout=180,
+        # 480 ולא 180 (נכשל בפועל 20/09/2026, ריצה ראשונה אחרי הוספת
+        # macro_data): עם 6 חיפושים ממוקדים נוספים לנתוני המאקרו, מעבר
+        # לחיפושים המקוריים, הבקשה כולה עברה את 180 שניות וקיבלה
+        # requests.exceptions.ReadTimeout - לא שגיאת API אמיתית, רק
+        # timeout מקומי קצר מדי מצד הלקוח. ל-job של GitHub Actions עצמו
+        # אין timeout-minutes מוגדר ב-weekly-review-update.yml (ברירת
+        # מחדל: 360 דקות) - כך שאין סיבה שה-timeout כאן יהיה כה הדוק.
+        timeout=480,
     )
 
     if resp.status_code != 200:
@@ -343,7 +350,7 @@ def main():
     args = ap.parse_args()
 
     print(f"מבקש מ-Claude לחקור ולכתוב ניתוח לשבוע {args.start_date} - {args.end_date}...")
-    print("(זה עשוי לקחת דקה-שתיים, בגלל החיפושים)")
+    print("(זה עשוי לקחת כמה דקות - כולל 6 חיפושים ממוקדים נוספים לנתוני macro_data)")
 
     result = generate(args.start_date, args.end_date)
 
