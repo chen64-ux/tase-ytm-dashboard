@@ -73,8 +73,24 @@ def fetch_cpi_series(years_back: int = 3):
     this_year = datetime.date.today().year
     url = CBS_API_URL.format(item_id=ITEM_ID, firstyear=this_year - years_back, lastyear=this_year)
     resp = requests.get(url, headers=HEADERS, timeout=30)
-    resp.raise_for_status()
-    return _parse_api_response(resp.json())
+
+    # נצפה בפועל (20/09/2026, ריצה ראשונה): הלמ"ס החזיר תגובה שנכשלה על
+    # json.loads עם "Expecting value: line 1 column 1 (char 0)" - שגיאה
+    # גנרית שלא אומרת אם זה גוף ריק, עמוד HTML/שגיאה, או משהו אחר. כדי
+    # לא לנחש שוב בעיוורון (כמו שקרה עם NY Fed/ביזפורטל בעבר) - במקום
+    # resp.raise_for_status() +resp.json() ישירים, בודקים סטטוס ידנית
+    # ומצרפים את תחילת הגוף הגולמי להודעת השגיאה, כדי שהריצה הבאה תיתן
+    # מספיק מידע לאבחון מדויק בלי צורך בעוד סיבוב ניחושים.
+    if resp.status_code != 200:
+        raise RuntimeError(f"status={resp.status_code}, תחילת התגובה: {resp.text[:300]!r}")
+    try:
+        data = resp.json()
+    except ValueError as e:
+        raise RuntimeError(
+            f"התגובה אינה JSON תקין ({e}) - סטטוס={resp.status_code}, "
+            f"אורך גוף התגובה={len(resp.text)}, תחילת התגובה הגולמית: {resp.text[:300]!r}"
+        ) from e
+    return _parse_api_response(data)
 
 
 def compute_cpi_summary(cpi: dict):
