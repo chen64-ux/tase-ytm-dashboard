@@ -10,8 +10,18 @@ run_weekly_review.py
 קבצי קלט ידניים (ב-repo root, כולם אופציונליים - אם חסרים, החלק
 המתאים בסקירה פשוט יהיה ריק/לא יופיע):
   - weekly_companies.json   (דוחות כספיים - ראה weekly_companies_example.json)
-  - weekly_macro.json       (פריטי מאקרו נוספים - ראה weekly_macro_example.json)
-  - weekly_cpi_israel.json  ({"value": "...", "note": "..."})
+  - weekly_macro.json       (פריטי מאקרו - fallback בלבד, ראה למטה)
+  - weekly_cpi_israel.json  ({"value": "...", "note": "..."}, מתעדכן אוטומטית
+                              מהלמ"ס ע"י run_daily_local.py - ראה fetch_cpi_israel.py)
+
+מ-20/09/2026: שורות טבלת המאקרו (חוץ ממדד המחירים לישראל) מתעדכנות
+אוטומטית מתוך שדה macro_data בתגובת generate_weekly_analysis.py (Claude +
+חיפוש אינטרנט - ראה _apply_macro_data_to_weekly_review למטה), במקום
+מ-weekly_macro.json הידני. weekly_macro.json עדיין נקרא ע"י
+fetch_weekly_review.py כברירת מחדל התחלתית (כדי שהסעיף לא יהיה ריק
+לגמרי), אבל נדרס אוטומטית ברגע שהניתוח האנליטי מצליח לספק macro_data -
+ולכן weekly_macro.json משמש בפועל רק בשבועות שבהם הניתוח האנליטי לא
+רץ (למשל אין ANTHROPIC_API_KEY) או נכשל.
 """
 
 import datetime
@@ -41,12 +51,53 @@ BANKS_INDEX_OVERRIDE_PATH = _REPO_DIR / "bizportal_banks_index.json"
 
 LOG_PATH = _REPO_DIR / "weekly_review_log.txt"
 
+# חייב להיות זהה בדיוק ל-title שבונה build_macro_section ב-fetch_weekly_review.py.
+MACRO_SECTION_TITLE = "4. נתוני מאקרו"
+CPI_ISRAEL_ROW_NAME = "מדד המחירים לצרכן ישראל"
+
 
 def log(msg):
     line = f"[{datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}] {msg}"
     print(line)
     with open(LOG_PATH, "a", encoding="utf-8") as f:
         f.write(line + "\n")
+
+
+def _apply_macro_data_to_weekly_review(weekly_data, macro_data):
+    """מחליף את שורות טבלת המאקרו (חוץ משורת מדד המחירים לישראל, ששורה
+    0 ומגיעה כבר ממקור אוטומטי נפרד - הלמ"ס, ראה fetch_cpi_israel.py)
+    בנתונים שנשלפו ע"י הניתוח האנליטי (macro_data מ-generate_weekly_analysis.py,
+    Claude + חיפוש אינטרנט) - במקום להישאר תקועים עם נתוני weekly_macro.json
+    הידניים/הישנים. לא-קריטי: אם הסעיף לא נמצא או macro_data ריק/לא
+    תקין, פשוט משאירים את מה שכבר יש (מ-weekly_macro.json, אם קיים)."""
+    sections = weekly_data.get("sections", [])
+    macro_section = next((s for s in sections if s.get("title") == MACRO_SECTION_TITLE), None)
+    if macro_section is None:
+        log(f"  ℹ️  לא נמצא סעיף '{MACRO_SECTION_TITLE}' ב-weekly_review.json - מדלג על עדכון נתוני מאקרו מהניתוח.")
+        return
+
+    new_rows = []
+    for item in macro_data:
+        if not isinstance(item, dict):
+            continue
+        name, value = item.get("name"), item.get("value")
+        if not name or not value:
+            continue
+        new_rows.append([name, value, item.get("note") or ""])
+
+    if not new_rows:
+        log("  ℹ️  macro_data מהניתוח האנליטי היה ריק/לא תקין - נשארים עם הנתונים הקיימים (weekly_macro.json אם יש).")
+        return
+
+    existing_rows = macro_section.get("rows") or []
+    cpi_row = existing_rows[0] if existing_rows and existing_rows[0][0] == CPI_ISRAEL_ROW_NAME else None
+    macro_section["rows"] = ([cpi_row] if cpi_row else []) + new_rows
+    macro_section["footnotes"] = [
+        f'שורת "{CPI_ISRAEL_ROW_NAME}" מתעדכנת אוטומטית מהלמ"ס (נשלף מקומית, ראה fetch_cpi_israel.py). '
+        "שאר השורות מתעדכנות אוטומטית כחלק מהניתוח האנליטי השבועי (Claude + חיפוש אינטרנט) - "
+        "ייתכנו אי-דיוקים, מומלץ להצליב מול המקור המקורי אם יש ספק."
+    ]
+    log(f"✅ עודכנו {len(new_rows)} שורות מאקרו מתוך הניתוח האנליטי (בנוסף לשורת מדד המחירים לישראל).")
 
 
 def main():
@@ -99,8 +150,10 @@ def main():
         log("❌ weekly_review.json לא נוצר - עוצר.")
         sys.exit(1)
 
-    # ניתוח אנליטי (5 סעיפי טקסט חופשי, ע"י Claude + חיפוש אינטרנט) -
-    # שכבה נוספת מעל הטבלאות האוטומטיות, ולא תחליף להן. בתשלום (ראה
+    # ניתוח אנליטי (5 סעיפי טקסט חופשי + macro_data, ע"י Claude + חיפוש
+    # אינטרנט) - שכבה נוספת מעל הטבלאות האוטומטיות, לא תחליף מלאה להן
+    # (למעט שורות טבלת המאקרו, שכן נדרסות ע"י macro_data - ראה
+    # _apply_macro_data_to_weekly_review). בתשלום (ראה
     # generate_weekly_analysis.py) ולכן לא חובה: אם לא הוגדר מפתח API
     # (ANTHROPIC_API_KEY - כמשתנה סביבה מקומי, או כ-GitHub secret),
     # פשוט מדלגים על השלב הזה ושאר הסקירה השבועית ממשיכה כרגיל. אותו
@@ -131,6 +184,11 @@ def main():
                 with open(WEEKLY_REVIEW_JSON_PATH, encoding="utf-8") as f:
                     weekly_data = json.load(f)
                 weekly_data["analysis"] = analysis
+
+                macro_data = analysis.get("macro_data")
+                if isinstance(macro_data, list) and macro_data:
+                    _apply_macro_data_to_weekly_review(weekly_data, macro_data)
+
                 with open(WEEKLY_REVIEW_JSON_PATH, "w", encoding="utf-8") as f:
                     json.dump(weekly_data, f, ensure_ascii=False, indent=2)
                 log("✅ הניתוח האנליטי שולב ב-weekly_review.json.")

@@ -5,6 +5,14 @@ generate_weekly_analysis.py
 לחקור ולכתוב ניתוח שבועי אנליטי - אירועים/מגמות של השבוע שחלף,
 מניות וסקטורים בולטים בישראל ובארה"ב, ומבט קדימה לשבוע הבא.
 
+מ-20/09/2026: באותה קריאת API (בלי עלות נוספת בנפרד) גם שולף ומחזיר
+שדה macro_data - שישה נתוני מאקרו אמריקאיים (תביעות אבטלה, פד
+פילדלפיה, LEI, PMI, חוב ממשלתי) - כדי להחליף את שורות טבלת המאקרו
+שהיו עד עכשיו ידניות בלבד (weekly_macro.json, שלא עודכן מעולם מאז
+הקמת הפרויקט). run_weekly_review.py הוא זה שמשתמש בשדה הזה בפועל
+(אם קיים ותקין) כדי להחליף את השורות המתאימות ב-weekly_review.json -
+לא-קריטי: אם חסר/נכשל, הטבלה פשוט נופלת חזרה ל-weekly_macro.json.
+
 *** עלות: זו קריאת API בתשלום (טוקנים + חיפושי אינטרנט) - לא חינמי
     כמו שאר הסקריפטים בפרויקט. עלות משוערת לריצה: כמה סנטים עד
     כדולר בודד, תלוי בהיקף החיפושים שהמודל בוחר לבצע. ***
@@ -58,22 +66,37 @@ PROMPT_TEMPLATE = """כתוב ניתוח שבועי אנליטי לשוק ההו
 4. notable_stocks_us - מניות וסקטורים בולטים בארה"ב השבוע, עם הסבר קצר לסיבה
 5. outlook_next_week - אירועים/נתונים כלכליים צפויים בשבוע הבא שכדאי לעקוב אחריהם
 
+בנוסף, חפש ומצא את הנתונים העדכניים ביותר (נכון לשבוע הזה) לששת נתוני המאקרו
+האמריקאיים הבאים, והחזר אותם במערך JSON בשם macro_data - בדיוק בסדר הזה, שישה
+פריטים (לא פחות ולא יותר), כל אחד כאובייקט {{"name": "...", "value": "...", "note": "..."}}:
+1. תביעות אבטלה ראשוניות בארה"ב - השבוע האחרון שפורסם
+2. תביעות אבטלה נמשכות בארה"ב - השבוע האחרון שפורסם
+3. מדד פד פילדלפיה - החודש האחרון שפורסם
+4. Leading Economic Index (LEI) - החודש האחרון שפורסם
+5. PMI מרוכב בארה"ב (פלאש) - החודש הנוכחי אם פורסם, אחרת האחרון הידוע
+6. חוב ממשלתי ארה"ב - עדכון מהותי אם היה השבוע, אחרת הערך האחרון הידוע
+
+לכל פריט: בשדה "name" ציין גם את התאריך/התקופה המדויקים של הנתון (למשל "שבוע
+שהסתיים 12.9" או "אוגוסט 2026"), בשדה "value" את המספר/הערך עצמו, ובשדה "note"
+הקשר קצר (למשל השוואה לתקופה קודמת, האם זו הפתעה חיובית/שלילית וכו'). אם לא
+הצלחת למצוא נתון אמין לפריט מסוים, החזר "value": "לא נמצא" ואל תמציא מספר.
+
 כתוב טקסט חופשי רגיל בלבד - בלי שום תגיות ציטוט (כמו <cite> או (cite)
 או כל סימון דומה סביב עובדות שמקורן בחיפוש) ובלי סוגריים מרובעים של
 מספור הערות שוליים. אם רלוונטי, אפשר לציין את שם המקור במפורש בתוך
 המשפט עצמו (למשל "לפי דיווח ב-Yahoo Finance"), אבל לא בשום תחביר של
 תגית או קוד.
 
-חשוב לגבי קיצורים עבריים בתוך הטקסט (כמו אג"ח, ש"ח, ארה"ב וכדומה):
-מכיוון שהתשובה כולה היא JSON, אסור להשתמש בגרש ASCII רגיל (") בתוך
-ערכי המחרוזת - זה שובר את מבנה ה-JSON. במקום זה יש להשתמש בתו הגרשיים
-העברי התקני ״ (gershayim, לא מרכאות רגילות) לכל קיצור כזה, למשל אג״ח,
-ש״ח, ארה״ב - לעולם לא אג"ח עם מרכאות ASCII.
+חשוב לגבי קיצורים עבריים בתוך הטקסט (כמו אג"ח, ש"ח, ארה"ב וכדומה), בכל
+השדות כולל בתוך macro_data: מכיוון שהתשובה כולה היא JSON, אסור להשתמש
+בגרש ASCII רגיל (") בתוך ערכי המחרוזת - זה שובר את מבנה ה-JSON. במקום
+זה יש להשתמש בתו הגרשיים העברי התקני ״ (gershayim, לא מרכאות רגילות)
+לכל קיצור כזה, למשל אג״ח, ש״ח, ארה״ב - לעולם לא אג"ח עם מרכאות ASCII.
 
 השב אך ורק ב-JSON תקני בפורמט הבא, בלי שום טקסט, כותרת, משפט הקדמה
 (למשל "הנה הניתוח" או "עכשיו אכתוב את התשובה"), או ```json לפני/אחרי -
 התגובה שלך חייבת להתחיל ב-{{ ולהסתיים ב-}} ולא בשום תו אחר:
-{{"summary": "...", "past_week_events": "...", "notable_stocks_il": "...", "notable_stocks_us": "...", "outlook_next_week": "..."}}
+{{"summary": "...", "past_week_events": "...", "notable_stocks_il": "...", "notable_stocks_us": "...", "outlook_next_week": "...", "macro_data": [{{"name": "...", "value": "...", "note": "..."}}, ...שישה פריטים בסה"כ...]}}
 """
 
 
@@ -110,6 +133,25 @@ def strip_citation_markup(text):
 
 FIELD_ORDER = ["summary", "past_week_events", "notable_stocks_il", "notable_stocks_us", "outlook_next_week"]
 
+# הגרש העברי התקני (gershayim, U+05F4) - ראה _repair_embedded_hebrew_quotes.
+GERSHAYIM = "״"
+_HEBREW_QUOTE_FIX_RE = re.compile(r"(?<=[א-ת])\"(?=[א-ת])")
+
+
+def _repair_embedded_hebrew_quotes(text):
+    """תיקון מקדים (נוסף 20/09/2026, אחרי שנצפה בפועל ש-Claude ממשיך
+    לפעמים להשתמש בגרש ASCII (") בתוך קיצורים עבריים כמו אג"ח/ש"ח/
+    ארה"ב למרות ההנחיה המפורשת בפרומפט): כל גרש ASCII שנמצא *בין שתי
+    אותיות עבריות* (למשל אג"ח) מוחלף בגרש העברי התקני ״ - זו בדיוק
+    התבנית שגורמת לשבירת ה-JSON, כי גרשיים מבניים של JSON (פתיחה/
+    סגירה של ערך מחרוזת) תמיד צמודים לתו מבנה כמו {{ }} [ ] : , ולא
+    לאות עברית משני הצדדים. מופעל על *כל* הטקסט הגולמי לפני הניסיון
+    הראשון של json.loads - כך זה מתקן את הבעיה בכל שדה, כולל שדה חדש
+    כמו macro_data (מערך), בלי צורך בטיפול ייעודי לכל שדה כמו
+    _extract_fields_by_boundary למטה (שנשאר כרשת ביטחון נוספת, למקרה
+    שהתיקון הזה לא מספיק)."""
+    return _HEBREW_QUOTE_FIX_RE.sub(GERSHAYIM, text)
+
 
 def _extract_fields_by_boundary(cleaned):
     """שיטת חילוץ סלחנית יותר, לשימוש רק כש-json.loads נכשל - עוקפת
@@ -122,7 +164,13 @@ def _extract_fields_by_boundary(cleaned):
     הקבועים והידועים מראש (5 שדות, סדר קבוע) וחותכת את הטקסט ביניהם -
     כך מרכאות פנימיות בתוך הערך עצמו לא משפיעות. מחזירה dict או None
     אם המבנה לא תואם בכלל (למשל שדה חסר) - במקרה כזה נופלים חזרה
-    לשגיאה הרגילה."""
+    לשגיאה הרגילה.
+
+    הערה (20/09/2026): מאז שנוסף שדה macro_data *אחרי* outlook_next_week
+    (השדה האחרון ב-FIELD_ORDER), אי אפשר יותר להניח ש-outlook_next_week
+    צמוד ל-'}' הסוגר של כל האובייקט - לכן עבור השדה האחרון ב-FIELD_ORDER
+    מחפשים קודם את התחלת "macro_data" (אם קיים בתגובה בכלל) ורק אם הוא
+    לא נמצא נופלים חזרה על החיפוש עד ה-'}' האחרון כמו קודם."""
     result = {}
     for i, key in enumerate(FIELD_ORDER):
         key_marker = f'"{key}"'
@@ -139,9 +187,10 @@ def _extract_fields_by_boundary(cleaned):
 
         if i + 1 < len(FIELD_ORDER):
             next_marker = f'"{FIELD_ORDER[i + 1]}"'
-            next_key_idx = cleaned.find(next_marker, value_start)
-            if next_key_idx == -1:
-                return None
+        else:
+            next_marker = '"macro_data"'
+        next_key_idx = cleaned.find(next_marker, value_start)
+        if next_key_idx != -1:
             value_end = cleaned.rfind('"', value_start, next_key_idx)
         else:
             close_brace_idx = cleaned.rfind("}")
@@ -166,6 +215,8 @@ def parse_json_response(raw_text):
     end = cleaned.rfind("}")
     if start != -1 and end != -1 and end > start:
         cleaned = cleaned[start:end + 1]
+
+    cleaned = _repair_embedded_hebrew_quotes(cleaned)
 
     try:
         # strict=False: נצפה בפועל (15/09/2026, ריצה רביעית) ש-Claude
@@ -219,8 +270,10 @@ def generate(start_date: str, end_date: str) -> dict:
             # מהרגיל) ותהליך "חשיבה" (thinking) לא-קצר בין הסבבים - שני
             # אלה "אוכלים" ממכסת הטוקנים לפני שמגיעים לתשובה הסופית.
             # מרווח נדיב יותר - זה רק תקרה (stop condition), לא עלות
-            # בפועל אלא אם התשובה באמת מגיעה לשם.
-            "max_tokens": 16000,
+            # בפועל אלא אם התשובה באמת מגיעה לשם. הועלה שוב ל-20000
+            # (20/09/2026) עם הוספת שדה macro_data (עוד 6 פריטי חיפוש) -
+            # תגובה ארוכה יותר מהרגיל.
+            "max_tokens": 20000,
             "tools": [{"type": "web_search_20250305", "name": "web_search"}],
             "messages": [{"role": "user", "content": prompt}],
         },
@@ -259,6 +312,26 @@ def generate(start_date: str, end_date: str) -> dict:
     for key in required_keys:
         if isinstance(result.get(key), str):
             result[key] = strip_citation_markup(result[key])
+
+    # macro_data (נתוני מאקרו אמריקאיים, ראה הפרומפט) - לא-קריטי בכוונה:
+    # אם חסר/לא תקין, פשוט לא נכלל בתוצאה. run_weekly_review.py יודע
+    # ליפול חזרה על weekly_macro.json הידני במקרה כזה, בלי לחסום את
+    # שאר הניתוח האנליטי (5 השדות הראשיים) שכבר עבד בהצלחה.
+    macro_data = result.get("macro_data")
+    if isinstance(macro_data, list):
+        cleaned_macro = []
+        for item in macro_data:
+            if not isinstance(item, dict):
+                continue
+            cleaned_macro.append({
+                k: (strip_citation_markup(v) if isinstance(v, str) else v)
+                for k, v in item.items()
+            })
+        result["macro_data"] = cleaned_macro
+    else:
+        if "macro_data" in result:
+            print("  ⚠️  macro_data בתשובת ה-API אינו מערך תקין - מתעלם ממנו (הטבלאות עדיין יתעדכנו כרגיל).")
+        result.pop("macro_data", None)
 
     return result
 
