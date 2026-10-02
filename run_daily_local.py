@@ -33,11 +33,22 @@ OneDrive מקומית (ראה ONEDRIVE_BACKUP_DIR) - עותק מראה (mirror) 
 bizportal_banks_index.json, שנקרא בהמשך ע"י fetch_weekly_review.py
 דרך weekly-review-update.yml בענן.
 
-שלב נוסף (שלב 3/5, מ-20/09/2026) שולף מקומית מהלמ"ס את מדד המחירים
+שלב נוסף (שלב 4/6, מ-20/09/2026) שולף מקומית מהלמ"ס את מדד המחירים
 לצרכן (ראה fetch_cpi_israel.py) וכותב אותו ל-weekly_cpi_israel.json -
 עד עכשיו הקובץ הזה עודכן רק ידנית ונשאר תקוע עם נתוני הדוגמה
 המקוריים מאז הקמת הפרויקט, כך שטבלת המאקרו בסקירה השבועית הציגה כל
 שבוע בדיוק אותם נתונים ישנים.
+
+שלב נוסף (שלב 0/6, מ-02/10/2026): לפני כל ריצה, בודק האם יש שינויים
+לא-מחויבים (uncommitted) בקבצים שכבר במעקב git מלבד אלה שהריצה עצמה
+אמורה לשנות (FILES_TO_PUSH) - בעיקר holdings.xlsx, שמתעדכן ידנית
+ע"י update_holdings.bat/update_holdings_and_run.bat. זה בדיוק מה
+שגרם לארבעה כשלונות רצופים ביום אחד (16/09/2026): git pull --ff-only
+נכשל עם "Your local changes... would be overwritten by merge", וזה
+חזר על עצמו בכל ריצה עד שהבעיה תוקנה ידנית. הבדיקה הזו לא עוצרת את
+הריצה (יכול להיות שינוי לגיטימי שעדיין לא הגיע זמנו) - רק מתריעה
+מראש בלוג, כדי שהאבחון יהיה מיידי במקום להתחיל מ"git pull נכשל"
+המעורפל.
 """
 
 import datetime
@@ -151,6 +162,45 @@ def run_git(args, check=False):
 
 def step(msg):
     print(f"\n=== {msg} ===")
+
+
+def check_uncommitted_tracked_changes() -> None:
+    """בודק אם יש שינויים לא-מחויבים (uncommitted) בקבצים שכבר במעקב
+    git, מלבד אלה שהריצה הזו עצמה אמורה לשנות (FILES_TO_PUSH) - כמו
+    holdings.xlsx, שגרם בעבר (16/09/2026) לכמה כשלונות רצופים באותו
+    יום כי git pull --ff-only נכשל עם "Your local changes... would be
+    overwritten by merge". לא עוצר את הריצה (יכול להיות גם שינוי
+    לגיטימי שעדיין לא הגיע זמנו) - רק מתריע מראש בלוג, כדי שהאבחון
+    יהיה מיידי אם ה-pull/push בהמשך הריצה הזו ייכשל, במקום להתחיל
+    מהודעת git המעורפלת."""
+    result = run_git(["status", "--porcelain"])
+    if result.returncode != 0:
+        return
+
+    files_to_push_normalized = {f.replace("\\", "/") for f in FILES_TO_PUSH}
+    dirty_files = []
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        status_code, filename = line[:2], line[3:].strip()
+        if status_code.strip() == "??":  # קובץ לא-במעקב בכלל - לא רלוונטי כאן
+            continue
+        if filename.replace("\\", "/") in files_to_push_normalized:
+            continue
+        dirty_files.append(filename)
+
+    if not dirty_files:
+        return
+
+    files_list = ", ".join(dirty_files)
+    log_wrapper_event(
+        "⚠️  נמצאו שינויים לא-מחויבים (uncommitted) בקבצים הבאים שכבר במעקב git, "
+        f"לפני תחילת הריצה: {files_list} - אם ה-pull/push בהמשך הריצה הזו ייכשל, "
+        "זו כנראה הסיבה (בדיוק כמו שקרה עם holdings.xlsx ב-16/09/2026). "
+        "לתיקון: בצעי commit+push לקובץ (עבור holdings.xlsx - update_holdings_and_run.bat), "
+        "או commit/stash ידני, לפני שהריצה הבאה מתוזמנת."
+    )
+    print(f"⚠️  שינויים לא-מחויבים בקבצים שבמעקב git (ראו run_daily_local_log.txt): {files_list}")
 
 
 def ensure_git_merge_config():
@@ -325,28 +375,34 @@ def backup_to_onedrive() -> None:
 def main():
     ensure_git_merge_config()
 
-    step("שלב 0/5: מושך עדכונים אחרונים מ-GitHub")
+    step("שלב 0/6: בודק שינויים מקומיים לא-מחויבים בקבצים שבמעקב git")
+    try:
+        check_uncommitted_tracked_changes()
+    except Exception as exc:
+        log_wrapper_event(f"⚠️  בדיקת שינויים לא-מחויבים נכשלה עם חריגה: {exc}")
+
+    step("שלב 1/6: מושך עדכונים אחרונים מ-GitHub")
     pull_latest_before_run()
 
-    step("שלב 1/5: מריץ את run_daily_update.py המקומי")
+    step("שלב 2/6: מריץ את run_daily_update.py המקומי")
     run_daily_update()
 
-    step("שלב 2/5: שולף מדד ת\"א בנקים מביזפורטל (עבור הסקירה השבועית)")
+    step("שלב 3/6: שולף מדד ת\"א בנקים מביזפורטל (עבור הסקירה השבועית)")
     try:
         fetch_banks_index_override()
     except Exception as exc:
         log_wrapper_event(f"⚠️  שליפת מדד ת\"א בנקים נכשלה עם חריגה: {exc}")
 
-    step("שלב 3/5: מעדכן מדד המחירים לצרכן מהלמ\"ס (עבור הסקירה השבועית)")
+    step("שלב 4/6: מעדכן מדד המחירים לצרכן מהלמ\"ס (עבור הסקירה השבועית)")
     try:
         update_weekly_cpi_israel()
     except Exception as exc:
         log_wrapper_event(f"⚠️  עדכון מדד המחירים לצרכן נכשל עם חריגה: {exc}")
 
-    step("שלב 4/5: דוחף את התוצאה ל-GitHub")
+    step("שלב 5/6: דוחף את התוצאה ל-GitHub")
     git_commit_and_push()
 
-    step("שלב 5/5: מגבה ל-OneDrive")
+    step("שלב 6/6: מגבה ל-OneDrive")
     try:
         backup_to_onedrive()
     except Exception as exc:
