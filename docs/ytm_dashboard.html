@@ -2617,10 +2617,35 @@ document.getElementById('btn-export-weekly-word').addEventListener('click', () =
 // המובנה בדפדפן - אין תלות בשירות חיצוני/API בתשלום. התור נבנה לפי
 // קטעים (שדה ניתוח/טבלה) כדי שעצירה תהיה נקייה ומיידית, ולא utterance
 // ענק אחד.
-if ('speechSynthesis' in window) {
-  window.speechSynthesis.getVoices(); // חימום מוקדם - בחלק מהדפדפנים הרשימה נטענת אסינכרונית
-}
 let isReadingWeeklyReview = false;
+
+// רשימת הקולות ב-speechSynthesis נטענת אסינכרונית בחלק מהדפדפנים
+// (ל-Chrome יש קולות "רשת" כמו Google עברית שנטענים רק לאחר אירוע
+// voiceschanged ולא מיידית ב-getVoices() הראשון) - אם שואלים מוקדם
+// מדי מקבלים רשימה ריקה, לא מוצאים קול עברי, והדפדפן מקריא עם קול
+// ברירת-המחדל (לרוב אנגלי) שלא יודע להגיד עברית - בדיוק התסמין של
+// "מקריא באנגלית משהו לא קשור". הפונקציה הזו מחכה לאירוע (עם timeout
+// לגיבוי) לפני שמחליטים שאין קול עברי.
+function getVoicesAsync() {
+  return new Promise(resolve => {
+    const existing = window.speechSynthesis.getVoices();
+    if (existing.length) { resolve(existing); return; }
+    let resolved = false;
+    window.speechSynthesis.onvoiceschanged = () => {
+      if (resolved) return;
+      resolved = true;
+      resolve(window.speechSynthesis.getVoices());
+    };
+    setTimeout(() => {
+      if (resolved) return;
+      resolved = true;
+      resolve(window.speechSynthesis.getVoices());
+    }, 1200);
+  });
+}
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices(); // חימום מוקדם - מפעיל את הטעינה האסינכרונית
+}
 
 function buildWeeklyReviewSpeechChunks() {
   const d = WEEKLY_REVIEW_DATA;
@@ -2670,7 +2695,7 @@ function stopWeeklyReviewSpeech() {
   setReadWeeklyButtonIdle();
 }
 
-function startWeeklyReviewSpeech() {
+async function startWeeklyReviewSpeech() {
   if (!('speechSynthesis' in window)) {
     alert('הדפדפן הזה לא תומך בהקראה קולית (Web Speech API).');
     return;
@@ -2678,14 +2703,28 @@ function startWeeklyReviewSpeech() {
   const chunks = buildWeeklyReviewSpeechChunks();
   if (!chunks.length) return;
 
+  const btn = document.getElementById('btn-read-weekly');
+  if (btn) btn.textContent = '⏳ טוען קול עברי...';
+
   window.speechSynthesis.cancel(); // ביטחון - מנקה תור קודם אם היה כזה שנשאר תקוע
-  const voices = window.speechSynthesis.getVoices();
+  const voices = await getVoicesAsync();
   const hebrewVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('he'));
+
+  if (!hebrewVoice) {
+    setReadWeeklyButtonIdle();
+    alert(
+      'לא נמצא קול עברי בדפדפן/במחשב הזה, ולכן ההקראה תישמע באנגלית/מעורבב ' +
+      'ולא תהיה מובנת.\n\nבדרך כלל אפשר לפתור בווינדוס: הגדרות ← שעה ושפה ← ' +
+      'דיבור (Speech) ← הוספת קולות (Add voices) ← לחפש "עברית" ולהתקין.\n\n' +
+      'לאחר ההתקנה - לרענן את הדף (F5) ולנסות שוב.'
+    );
+    return;
+  }
 
   chunks.forEach((text, idx) => {
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'he-IL';
-    if (hebrewVoice) utter.voice = hebrewVoice;
+    utter.voice = hebrewVoice;
     utter.rate = 1;
     if (idx === chunks.length - 1) {
       utter.onend = setReadWeeklyButtonIdle;
@@ -2694,7 +2733,6 @@ function startWeeklyReviewSpeech() {
   });
 
   isReadingWeeklyReview = true;
-  const btn = document.getElementById('btn-read-weekly');
   if (btn) btn.textContent = '⏹ עצירת ההקראה';
 }
 
