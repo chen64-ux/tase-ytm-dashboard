@@ -35,7 +35,8 @@ from collections import defaultdict
 
 REPO_DIR = pathlib.Path(__file__).parent
 SECTION_PREFIXES = ("7.", "8.")
-STOCK_TITLE = '7. ת"א 125 - תנודות שבועיות בניירות הערך'
+STOCK_TITLE = '7. ת"א 125 - 10 העולות ו-10 היורדות ביותר'
+TOP_N = 10
 SECTOR_TITLE = '8. ת"א 125 - סיכום לפי ענף'
 PRIOR_DAYS_MIN = 10          # מינימום ימי מסחר היסטוריים להשוואת מחזור
 PRIOR_WINDOW_DAYS = 28
@@ -201,13 +202,18 @@ def compute(start, end, data_dir, universe, index_return=None):
     return stocks, proxy, bench, bench_label, weight_src, win_dates, n_prior, warnings
 
 
-def build_sections(stocks, proxy, bench, bench_label, weight_src, win_dates, n_prior, warnings, start, end):
+def build_sections(stocks, proxy, bench, bench_label, weight_src, win_dates, n_prior, warnings, start, end, top_n=TOP_N):
     ok = sorted([s for s in stocks if s["R"] is not None], key=lambda s: s["R"], reverse=True)
-    rows = [[s["name"], s["sector"], s["R"], s["rel"], s["contrib"],
-             round(s["turn"] / 1000, 1), s["turn_vs"], s["notes"]] for s in ok]
+    def _row(s):
+        return [s["name"], s["sector"], s["R"], s["rel"], s["contrib"],
+                round(s["turn"] / 1000, 1), s["turn_vs"], s["notes"]]
+    shown = ok if (not top_n or len(ok) <= 2 * top_n) else ok[:top_n] + ok[-top_n:]
+    rows = [_row(s) for s in shown]
     foot = [
         "תשואה שבועית = ריבית דריבית של השינוי היומי (שער סגירה מול שער בסיס מותאם); ביום אקס דיבידנד הירידה בשער בגלל הדיבידנד אינה נספרת כהפסד.",
         f"תקופה: {win_dates[0]} עד {win_dates[-1]} ({len(win_dates)} ימי מסחר). מול המדד = תשואה פחות {bench_label} ({bench:+.2%}). קירוב המדד מסכום תרומות: {proxy:+.2%}.",
+        (f"מוצגות {top_n} המניות העולות ביותר ו-{top_n} היורדות ביותר מתוך {len(ok)} (ממוין מהעולה ליורדת); הסיכום לפי ענף מתבסס על כל המניות."
+         if len(shown) < len(ok) else f"מוצגות כל {len(ok)} המניות."),
         f"תרומה = משקל תחילת שבוע × תשואה. מקור משקלים: {weight_src}.",
         "מחזור שבועי במיליוני ש\"ח; \"מחזור מול ממוצע\" = ממוצע יומי השבוע מול ממוצע יומי ב-4 השבועות הקודמים"
         + ("" if n_prior >= PRIOR_DAYS_MIN else " (לא מחושב - אין עדיין מספיק היסטוריה)") + ".",
@@ -258,6 +264,7 @@ def main(argv=None):
     ap.add_argument("--out", help="כתיבת הסעיפים לקובץ JSON")
     ap.add_argument("--csv-out", help="טבלה מלאה ל-CSV (לאקסל)")
     ap.add_argument("--merge-into", help="weekly_review.json - מחליף סעיפים 7-8")
+    ap.add_argument("--top", type=int, default=TOP_N, help="כמה מניות עולות ויורדות להציג בסעיף 7 (0 = הכל)")
     ap.add_argument("--index-return", type=float, help="תשואת ת\"א 125 המדווחת (שבר, למשל 0.0423)")
     a = ap.parse_args(argv)
 
@@ -277,7 +284,7 @@ def main(argv=None):
     universe = load_universe(a.universe)
     res = compute(start, end, a.data_dir, universe, idx)
     stocks, proxy, bench, bench_label, weight_src, win_dates, n_prior, warnings = res
-    sections = build_sections(*res, start, end)
+    sections = build_sections(*res, start, end, top_n=a.top)
 
     for w in warnings:
         print("⚠️ ", w)
@@ -288,7 +295,8 @@ def main(argv=None):
         with open(a.csv_out, "w", encoding="utf-8-sig", newline="") as f:
             w = csv.writer(f)
             w.writerow(sections[0]["headers"])
-            w.writerows(sections[0]["rows"])
+            full = build_sections(*res, start, end, top_n=0)[0]
+            w.writerows(full["rows"])  # ה-CSV תמיד מכיל את כל המניות
     if a.merge_into:
         merge_into(a.merge_into, sections)
         print(f"✅ סעיפים 7-8 עודכנו ב-{a.merge_into}")
