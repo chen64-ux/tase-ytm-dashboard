@@ -150,6 +150,22 @@ def main():
         log("❌ weekly_review.json לא נוצר - עוצר.")
         sys.exit(1)
 
+    # סעיפים 7-8: תנודות שבועיות של מניות ת"א-125 (לא קריטי - כשל לא עוצר את הסקירה)
+    ta125_script = _REPO_DIR / "compute_ta125_weekly.py"
+    if ta125_script.exists():
+        try:
+            r = subprocess.run(
+                [sys.executable, str(ta125_script),
+                 "--start", start_date.isoformat(), "--end", end_date.isoformat(),
+                 "--merge-into", str(WEEKLY_REVIEW_JSON_PATH)],
+                cwd=str(_REPO_DIR), capture_output=True, text=True)
+            for line in (r.stdout or "").splitlines():
+                log(line)
+            if r.returncode != 0:
+                log(f"⚠️ חישוב ת\"א-125 נכשל (קוד {r.returncode}): {(r.stderr or '')[-300:]}")
+        except Exception as e:
+            log(f"⚠️ חישוב ת\"א-125 נכשל: {e!r}")
+
     # ניתוח אנליטי (5 סעיפי טקסט חופשי + macro_data, ע"י Claude + חיפוש
     # אינטרנט) - שכבה נוספת מעל הטבלאות האוטומטיות, לא תחליף מלאה להן
     # (למעט שורות טבלת המאקרו, שכן נדרסות ע"י macro_data - ראה
