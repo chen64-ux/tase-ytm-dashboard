@@ -21,7 +21,8 @@ compute_ta125_weekly.py
 שימוש:
     python compute_ta125_weekly.py --start 2026-10-10 --end 2026-10-17 --out ta125_weekly.json --csv-out ta125_weekly.csv
     python compute_ta125_weekly.py --start ... --end ... --merge-into weekly_review.json
-התקופה היא (start, end] - יום ההתחלה עצמו לא נכלל (זה סגירת השבוע הקודם).
+התקופה היא (start, end] = 7 ימים קלנדריים עד יום הנתונים האחרון, כולל אותו (ב'-ו' = עד 5 ימי מסחר).
+ללא --start/--end: end = היום האחרון שנאסף, start = end פחות 7 ימים (הרצה יומית).
 """
 
 import argparse
@@ -211,7 +212,8 @@ def build_sections(stocks, proxy, bench, bench_label, weight_src, win_dates, n_p
         "מחזור שבועי במיליוני ש\"ח; \"מחזור מול ממוצע\" = ממוצע יומי השבוע מול ממוצע יומי ב-4 השבועות הקודמים"
         + ("" if n_prior >= PRIOR_DAYS_MIN else " (לא מחושב - אין עדיין מספיק היסטוריה)") + ".",
     ] + [f"⚠️ {w}" for w in warnings]
-    sec1 = {"title": STOCK_TITLE,
+    last = datetime.date.fromisoformat(win_dates[-1])
+    sec1 = {"title": f"{STOCK_TITLE} (7 ימים עד {last:%d.%m.%Y})",
             "headers": ["נייר", "ענף", "תשואה שבועית", "מול המדד", "תרומה למדד",
                         "מחזור שבועי (מ' ש\"ח)", "מחזור מול ממוצע", "הערות"],
             "percent_cols": [2, 3, 4, 6], "rows": rows, "footnotes": foot}
@@ -227,7 +229,7 @@ def build_sections(stocks, proxy, bench, bench_label, weight_src, win_dates, n_p
         down = sum(1 for x in lst if x["R"] < 0)
         srows.append([sec, ret, sum(x["contrib"] for x in lst), len(lst), up, down, up / len(lst)])
     srows.sort(key=lambda r: r[1], reverse=True)
-    sec2 = {"title": SECTOR_TITLE,
+    sec2 = {"title": f"{SECTOR_TITLE} (7 ימים עד {last:%d.%m.%Y})",
             "headers": ["ענף", "תשואה (משוקללת)", "תרומה למדד", "מניות", "עלו", "ירדו", "רוחב (% שעלו)"],
             "percent_cols": [1, 2, 6], "rows": srows,
             "footnotes": ["תשואת ענף = ממוצע משוקלל במשקלי תחילת שבוע של מניות הענף.",
@@ -248,8 +250,9 @@ def merge_into(path, sections):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--start", required=True, help="YYYY-MM-DD, סגירת השבוע הקודם (לא נכלל)")
-    ap.add_argument("--end", required=True, help="YYYY-MM-DD, סוף התקופה (נכלל)")
+    ap.add_argument("--start", help="YYYY-MM-DD (לא נכלל). ברירת מחדל: end פחות 7 ימים")
+    ap.add_argument("--end", help="YYYY-MM-DD (נכלל). ברירת מחדל: היום האחרון שנאסף ב-data/ - "
+                                  "כלומר תשואה מצטברת של 7 הימים האחרונים כולל יום החישוב")
     ap.add_argument("--data-dir", default=str(REPO_DIR / "data"))
     ap.add_argument("--universe", default=str(REPO_DIR / "sector_mapping.json"))
     ap.add_argument("--out", help="כתיבת הסעיפים לקובץ JSON")
@@ -258,9 +261,18 @@ def main(argv=None):
     ap.add_argument("--index-return", type=float, help="תשואת ת\"א 125 המדווחת (שבר, למשל 0.0423)")
     a = ap.parse_args(argv)
 
-    start, end = datetime.date.fromisoformat(a.start), datetime.date.fromisoformat(a.end)
+    if a.end:
+        end = datetime.date.fromisoformat(a.end)
+    else:
+        all_dates = {r["date"] for r in load_daily(a.data_dir, datetime.date(2000, 1, 1))}
+        if not all_dates:
+            raise SystemExit(f"❌ אין נתונים ב-{a.data_dir}")
+        end = datetime.date.fromisoformat(max(all_dates))
+    start = datetime.date.fromisoformat(a.start) if a.start else end - datetime.timedelta(days=7)
     idx = a.index_return
-    if idx is None and a.merge_into:
+    # תשואת המדד המדווחת (סעיף 1) תואמת רק לריצת שבת (שבוע ראשון-שבת, כמו הסקירה);
+    # בריצה יומית גולשת משווים לקירוב המדד מסכום התרומות.
+    if idx is None and a.merge_into and a.end and end.weekday() == 5:
         idx = find_reported_index_return(a.merge_into)
     universe = load_universe(a.universe)
     res = compute(start, end, a.data_dir, universe, idx)
