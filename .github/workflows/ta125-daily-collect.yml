@@ -1,0 +1,66 @@
+name: TA125 Daily Collect (after close)
+
+# איסוף יומי של נתוני המניות אחרי סגירת המסחר (אחרי 19:00 שעון ישראל).
+# GitHub cron הוא ב-UTC ואינו מכיר שעון קיץ, לכן יש 3 הרצות:
+#   16:20 UTC = 19:20 קיץ (UTC+3) / 18:20 חורף (UTC+2 - הסקריפט ידלג, מוקדם מדי)
+#   17:20 UTC = 20:20 קיץ / 19:20 חורף
+#   18:20 UTC = 21:20 קיץ / 20:20 חורף (ניסיון חוזר אם הבורסה איחרה לעדכן)
+# הסקריפט עצמו בודק שעה בישראל (>=19) ושתאריך הקובץ = היום, ואידמפוטנטי -
+# ריצות מיותרות מסתיימות בדילוג ירוק.
+# שבת/ימים ללא מסחר: הקובץ נכון לתאריך קודם -> דילוג אוטומטי.
+on:
+  schedule:
+    - cron: "20 16 * * 1-5"
+    - cron: "20 17 * * 1-5"
+    - cron: "20 18 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "עקוף בדיקת שעה/תאריך (בדיקות בלבד)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ta125-daily-collect
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests tzdata
+
+      - name: Collect
+        run: |
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            python collect_ta125_daily.py --force
+          else
+            python collect_ta125_daily.py
+          fi
+
+      - name: Commit data
+        run: |
+          git config user.name "tase-bot"
+          git config user.email "tase-bot@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "אין שינוי בנתונים."
+            exit 0
+          fi
+          git commit -m "TA125 daily snapshot $(date -u +%F)"
+          for i in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
+            sleep 5
+          done
+          echo "push נכשל" && exit 1
