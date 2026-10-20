@@ -196,14 +196,14 @@ def month_file(d):
 def _read_rows(path):
     if not path.exists():
         return []
-    with open(path, encoding="utf-8", newline="") as f:
+    with open(path, encoding="utf-8-sig", newline="") as f:
         return list(csv.DictReader(f))
 
 
 def _write_rows(path, rows, fields):
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
-    with open(tmp, "w", encoding="utf-8", newline="") as f:
+    with open(tmp, "w", encoding="utf-8-sig", newline="") as f:
         w = csv.DictWriter(f, fieldnames=fields)
         w.writeheader()
         w.writerows(rows)

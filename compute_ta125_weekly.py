@@ -51,7 +51,7 @@ def load_daily(data_dir, since):
     """כל השורות מקבצי החודש עם date >= since. מחזיר list של dict."""
     rows = []
     for p in sorted(pathlib.Path(data_dir).glob("equity_daily_*.csv")):
-        with open(p, encoding="utf-8", newline="") as f:
+        with open(p, encoding="utf-8-sig", newline="") as f:
             for r in csv.DictReader(f):
                 if r["date"] >= since.isoformat():
                     rows.append(r)
@@ -73,7 +73,7 @@ def load_weights(data_dir, start):
     if not p.exists():
         return None, {}
     by_date = defaultdict(dict)
-    with open(p, encoding="utf-8", newline="") as f:
+    with open(p, encoding="utf-8-sig", newline="") as f:
         for r in csv.DictReader(f):
             w = _f(r.get("weight_pct"))
             if w is not None and r["date"] <= start.isoformat():
