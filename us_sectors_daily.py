@@ -36,6 +36,7 @@ SECTORS = [
     ("טכנולוגיה", "XLK"), ("פיננסים", "XLF"), ("בריאות", "XLV"), ("אנרגיה", "XLE"),
     ("צריכה מחזורית", "XLY"), ("צריכה בסיסית", "XLP"), ("תעשייה", "XLI"),
     ("חומרים", "XLB"), ("נדל\"ן", "XLRE"), ("שירותי תקשורת", "XLC"), ("תשתיות", "XLU"),
+    ("מוליכים למחצה (תת-ענף)", "SMH"),   # VanEck Semiconductor ETF - לא סקטור S&P 500 אלא תת-ענף של הטכנולוגיה
 ]
 MIN_OK_SECTORS = 8     # פחות מזה = כשל שליפה, לא מעדכנים את הסעיף
 WINDOW_DAYS = 7
@@ -139,6 +140,7 @@ def build_section(results, bench, last_day, skipped_today, failed):
         + f"תשואה יומית = מול סגירת {bench['prev']:%d.%m.%Y}; "
         f"תשואה 7 ימים = חלון מתגלגל מול סגירת {bench['base']:%d.%m.%Y} (7 ימים קלנדריים אחורה, כולל יום הסגירה).",
         "מקור: Yahoo Finance, קרנות הסקטורים SPDR (תשואה כוללת - adjusted close, דיבידנדים מנוטרלים). "
+        "מוליכים למחצה = קרן SMH (VanEck) - תת-ענף של הטכנולוגיה (בתוך XLK), לא סקטור נפרד של S&P 500. "
         "ממוין לפי תשואת 7 הימים; \"מול\" = הפרש מנקודות האחוז מול SPY.",
     ]
     if failed:
@@ -205,7 +207,7 @@ def main(argv=None):
         return 0
 
     section = build_section(results, bench, last_day, skipped_today, failed)
-    print(f"✅ {n_ok}/11 סקטורים, יום סגירה אחרון {last_day}, SPY יומי {bench['daily']:+.2%}, 7 ימים {bench['weekly']:+.2%}")
+    print(f"✅ {n_ok}/{len(SECTORS)} סקטורים, יום סגירה אחרון {last_day}, SPY יומי {bench['daily']:+.2%}, 7 ימים {bench['weekly']:+.2%}")
     if a.out:
         json.dump(section, open(a.out, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
     if a.merge_into:
