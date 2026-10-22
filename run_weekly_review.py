@@ -63,6 +63,53 @@ def log(msg):
         f.write(line + "\n")
 
 
+# סעיפים 7-9 (ת"א-125 ו-סקטורי ארה"ב, תשואה יומית/7 ימים מתגלגלת) מתעדכנים כל יום ע"י
+# ta125-daily-collect.yml. fetch_weekly_review.py בונה את weekly_review.json מחדש כל שבת, ולכן
+# שומרים אותם לפני ומשחזרים אחרי - כדי שהם לא יימחקו (ואם החישוב המחודש נכשל, נשארים הקיימים).
+ROLLING_SECTION_PREFIXES = ("7.", "8.", "9.")
+
+
+def _load_rolling_sections():
+    try:
+        with open(WEEKLY_REVIEW_JSON_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        return [s for s in data.get("sections", []) if str(s.get("title", "")).startswith(ROLLING_SECTION_PREFIXES)]
+    except (OSError, json.JSONDecodeError, AttributeError):
+        return []
+
+
+def _restore_rolling_sections(sections):
+    """מחזיר את הסעיפים השמורים ל-weekly_review.json שנבנה מחדש (מחליף סעיפים באותה קידומת)."""
+    if not sections:
+        return
+    try:
+        with open(WEEKLY_REVIEW_JSON_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        kept = [s for s in data.get("sections", []) if not str(s.get("title", "")).startswith(ROLLING_SECTION_PREFIXES)]
+        data["sections"] = kept + sections
+        with open(WEEKLY_REVIEW_JSON_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+        log(f"✅ שוחזרו {len(sections)} סעיפי תשואה מתגלגלת (7-9) שנשמרו מהריצה היומית האחרונה.")
+    except (OSError, json.JSONDecodeError, AttributeError) as e:
+        log(f"⚠️  שחזור סעיפים 7-9 נכשל: {e!r}")
+
+
+def _run_optional(script_name):
+    """מריץ סקריפט משלים (מיזוג ל-weekly_review.json). לא קריטי: כשל לא עוצר את הסקירה."""
+    script = _REPO_DIR / script_name
+    if not script.exists():
+        return
+    try:
+        r = subprocess.run([sys.executable, str(script), "--merge-into", str(WEEKLY_REVIEW_JSON_PATH)],
+                           cwd=str(_REPO_DIR), capture_output=True, text=True)
+        for line in (r.stdout or "").splitlines():
+            log(line)
+        if r.returncode != 0:
+            log(f"⚠️  {script_name} נכשל (קוד {r.returncode}): {(r.stderr or '')[-300:]}")
+    except Exception as e:  # noqa: BLE001
+        log(f"⚠️  {script_name} נכשל: {e!r}")
+
+
 def _apply_macro_data_to_weekly_review(weekly_data, macro_data):
     """מחליף את שורות טבלת המאקרו (חוץ משורת מדד המחירים לישראל, ששורה
     0 ומגיעה כבר ממקור אוטומטי נפרד - הלמ"ס, ראה fetch_cpi_israel.py)
@@ -136,6 +183,8 @@ def main():
     else:
         log(f"ℹ️  לא נמצא {BANKS_INDEX_OVERRIDE_PATH.name} - אם Yahoo ייכשל ל'ת\"א בנקים' תוצג שגיאה רגילה בלי override.")
 
+    preserved_rolling = _load_rolling_sections()  # לפני שהסקירה נבנית מחדש
+
     log(f"מריץ את fetch_weekly_review.py לטווח {start_date} - {end_date}...")
     result = subprocess.run(cmd, cwd=str(_REPO_DIR), capture_output=True, text=True)
     for line in result.stdout.splitlines():
@@ -150,21 +199,11 @@ def main():
         log("❌ weekly_review.json לא נוצר - עוצר.")
         sys.exit(1)
 
-    # סעיפים 7-8: תנודות שבועיות של מניות ת"א-125 (לא קריטי - כשל לא עוצר את הסקירה)
-    ta125_script = _REPO_DIR / "compute_ta125_weekly.py"
-    if ta125_script.exists():
-        try:
-            r = subprocess.run(
-                [sys.executable, str(ta125_script),
-                 "--start", start_date.isoformat(), "--end", end_date.isoformat(),
-                 "--merge-into", str(WEEKLY_REVIEW_JSON_PATH)],
-                cwd=str(_REPO_DIR), capture_output=True, text=True)
-            for line in (r.stdout or "").splitlines():
-                log(line)
-            if r.returncode != 0:
-                log(f"⚠️ חישוב ת\"א-125 נכשל (קוד {r.returncode}): {(r.stderr or '')[-300:]}")
-        except Exception as e:
-            log(f"⚠️ חישוב ת\"א-125 נכשל: {e!r}")
+    # סעיפים 7-9 (תשואה יומית/7 ימים מתגלגלת): משחזרים את הקיימים, ואז מנסים לרענן אותם
+    # (חלון מתגלגל עד היום האחרון שנאסף / עד סגירת יום המסחר הקודם בארה"ב).
+    _restore_rolling_sections(preserved_rolling)
+    _run_optional("compute_ta125_weekly.py")
+    _run_optional("us_sectors_daily.py")
 
     # ניתוח אנליטי (5 סעיפי טקסט חופשי + macro_data, ע"י Claude + חיפוש
     # אינטרנט) - שכבה נוספת מעל הטבלאות האוטומטיות, לא תחליף מלאה להן
