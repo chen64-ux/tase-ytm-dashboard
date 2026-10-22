@@ -1,0 +1,71 @@
+name: US Sectors Daily (05:00 Israel)
+
+# תשואות סקטורי ארה"ב (יומי + 7 ימים מתגלגל) - ריצה ב-05:00 שעון ישראל, אחרי שוול סטריט נסגרה.
+# GitHub cron הוא ב-UTC ואינו מכיר שעון קיץ:
+#   02:00 UTC = 05:00 בשעון קיץ ישראל (UTC+3, עד 25.10.2026)
+#   03:00 UTC = 05:00 בשעון חורף ישראל (UTC+2)
+# שתי ההרצות פעילות, ושלב הבדיקה מדלג על זו שאינה בשעה 05 (גם עם איחור של עד 59 דקות).
+# ב'-ו' בערב בניו יורק = ג'-ש' בבוקר בישראל.
+on:
+  schedule:
+    - cron: "0 2 * * 2-6"
+    - cron: "0 3 * * 2-6"
+  workflow_dispatch: {}
+
+concurrency:
+  group: us-sectors-daily
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  us-sectors:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Israel-time gate
+        id: gate
+        run: |
+          H=$(TZ=Asia/Jerusalem date +%H)
+          echo "שעה בישראל: $(TZ=Asia/Jerusalem date '+%F %H:%M')"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$H" = "05" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "לא 05:00 בישראל - דילוג."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: actions/setup-python@v5
+        if: steps.gate.outputs.run == 'true'
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        if: steps.gate.outputs.run == 'true'
+        run: pip install requests tzdata openpyxl python-dateutil scipy
+
+      - name: Update US sectors and dashboard
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          git pull --rebase origin "${GITHUB_REF_NAME}"
+          python us_sectors_daily.py --merge-into weekly_review.json
+          python build_dashboard.py ytm_computed.xlsx \
+            --template docs/ytm_dashboard.html --out docs/ytm_dashboard.html \
+            --weekly-review weekly_review.json
+          git config user.name "tase-bot"
+          git config user.email "tase-bot@users.noreply.github.com"
+          git add weekly_review.json docs/ytm_dashboard.html
+          if git diff --cached --quiet; then
+            echo "אין שינוי בדשבורד."
+            exit 0
+          fi
+          git commit -m "US sectors update $(date -u +%F)"
+          for i in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
+            sleep 5
+          done
+          echo "push נכשל" && exit 1

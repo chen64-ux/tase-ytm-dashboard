@@ -65,14 +65,13 @@ jobs:
           done
           echo "push נכשל" && exit 1
 
-      # סעיפים 7-8 (ת"א-125, 7 ימים מתגלגל) + סעיף 9 (סקטורי ארה"ב, יומי ו-7 ימים, עד סגירת יום המסחר הקודם)
+      # סעיפים 7-8 (ת"א-125, 7 ימים מתגלגל). סעיף 9 (סקטורי ארה"ב) מתעדכן ב-us-sectors-daily.yml ב-05:00.
       # בדשבורד, מתעדכנת כל יום מסחר. לא קריטי: כשל כאן לא מבטל את שמירת הנתונים למעלה.
       - name: Update dashboard (rolling 7 days)
         continue-on-error: true
         run: |
           git pull --rebase origin "${GITHUB_REF_NAME}"
           python compute_ta125_weekly.py --merge-into weekly_review.json
-          python us_sectors_daily.py --merge-into weekly_review.json
           python build_dashboard.py ytm_computed.xlsx \
             --template docs/ytm_dashboard.html --out docs/ytm_dashboard.html \
             --weekly-review weekly_review.json

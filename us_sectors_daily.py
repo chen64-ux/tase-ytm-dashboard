@@ -5,10 +5,10 @@ us_sectors_daily.py
 (Yahoo Finance, אותו API שבו משתמשת הסקירה השבועית), ושילוב כסעיף 9 ב-weekly_review.json.
 
 הגדרות:
-  * הבסיס הוא שער הסגירה של *יום המסחר האחרון שהסתיים* (היום הקודם) - לא של היום.
-    ברירת מחדל: ברים עם תאריך של היום (שעון ניו יורק) מוחרגים, כי כשהריצה בערב
-    בישראל וול סטריט עדיין פתוחה וה"סגירה" של היום היא מחיר ביניים.
-    (--include-today מבטל את ההחרגה, למשל לריצה אחרי הסגירה.)
+  * הבסיס הוא שער הסגירה של *יום המסחר האחרון שהסתיים* - לא מחיר ביניים של סשן פתוח.
+    ריצה ב-05:00 שעון ישראל (ערב בניו יורק, השוק סגור) כוללת את הסשן של "אתמול" בישראל;
+    ריצה בערב ישראל (השוק פתוח) מוחרגת מבר היום ומשתמשת בסשן הקודם.
+    (--include-today מכריח הכללת בר היום.)
   * תשואה יומית  = סגירת E מול סגירת יום המסחר הקודם לו. E = יום המסחר האחרון שהסתיים.
   * תשואה 7 ימים = סגירת E מול הסגירה האחרונה בתאריך <= E פחות 7 ימים קלנדריים
     (חלון מתגלגל, כולל יום E; אותה הגדרה כמו סעיפים 7-8 של ת"א-125).
@@ -18,7 +18,7 @@ us_sectors_daily.py
 שימוש:
     python us_sectors_daily.py --merge-into weekly_review.json
     python us_sectors_daily.py --out us_sectors.json            # בלי מיזוג
-    python us_sectors_daily.py --fixture-dir DIR --today 2026-10-22   # בדיקות (קובצי JSON של Yahoo)
+    python us_sectors_daily.py --fixture-dir DIR --ny-now 2026-10-22T22:00   # בדיקות (קובצי JSON של Yahoo)
 קוד יציאה 0 גם כש-Yahoo לא זמין (לא עוצר את הסקירה); 1 רק על שגיאת שימוש/קובץ.
 """
 
@@ -44,13 +44,26 @@ HEADERS = {"User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit
            "Accept": "application/json"}
 
 
-def _ny_today():
+MARKET_CLOSED_AFTER = datetime.time(16, 30)   # וול סטריט נסגרת ב-16:00 ET; 16:30 = מרווח ביטחון לנתון הסופי
+
+
+def _ny_now():
+    """השעה בניו יורק (naive)."""
     try:
         from zoneinfo import ZoneInfo
-        return datetime.datetime.now(ZoneInfo("America/New_York")).date()
-    except Exception:  # noqa: BLE001 - אין tzdata: ניו יורק ~ UTC-5/-4, נשתמש ב-UTC-5 (שמרני)
-        print("⚠️  tzdata לא זמין - מניח UTC-5 לתאריך ניו יורק.")
-        return (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=5)).date()
+        return datetime.datetime.now(ZoneInfo("America/New_York")).replace(tzinfo=None)
+    except Exception:  # noqa: BLE001 - אין tzdata: מניחים UTC-5 (שמרני: מאחר את "אחרי הסגירה" בשעה בקיץ)
+        print("⚠️  tzdata לא זמין - מניח UTC-5 לשעה בניו יורק.")
+        return (datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(hours=5)).replace(tzinfo=None)
+
+
+def last_completed_cutoff(ny_now, include_today=False):
+    """התאריך האחרון שמותר לכלול: היום (ניו יורק) רק אם השוק כבר סגור (אחרי 16:30 ET), אחרת אתמול.
+    כך ריצה ב-05:00 שעון ישראל (ערב בניו יורק) מציגה את הסשן שהסתיים, וריצה בערב ישראל
+    (השוק פתוח) לא נשענת על מחיר ביניים של היום."""
+    if include_today or ny_now.time() >= MARKET_CLOSED_AFTER:
+        return ny_now.date()
+    return ny_now.date() - datetime.timedelta(days=1)
 
 
 def parse_chart(data):
@@ -149,13 +162,14 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--merge-into", help="weekly_review.json - מחליף סעיף 9")
     ap.add_argument("--out", help="כתיבת הסעיף לקובץ JSON")
-    ap.add_argument("--include-today", action="store_true", help="כולל את בר התאריך של היום (ניו יורק)")
-    ap.add_argument("--today", help="לדריסת התאריך בניו יורק, YYYY-MM-DD (בדיקות)")
+    ap.add_argument("--include-today", action="store_true", help="כולל את בר היום (ניו יורק) גם אם השוק עוד פתוח")
+    ap.add_argument("--ny-now", help="לדריסת השעה בניו יורק, ISO (בדיקות), למשל 2026-10-22T22:00")
     ap.add_argument("--fixture-dir", help="תיקיית קובצי JSON של Yahoo (בדיקות), שם קובץ = TICKER.json")
     a = ap.parse_args(argv)
 
-    today = datetime.date.fromisoformat(a.today) if a.today else _ny_today()
-    cutoff = today if a.include_today else today - datetime.timedelta(days=1)
+    ny_now = datetime.datetime.fromisoformat(a.ny_now) if a.ny_now else _ny_now()
+    cutoff = last_completed_cutoff(ny_now, a.include_today)
+    print(f"שעה בניו יורק: {ny_now:%Y-%m-%d %H:%M}; תאריך חיתוך (סשן אחרון שהסתיים): {cutoff}")
 
     prices, failed = {}, []
     for name, tk in SECTORS + [BENCH]:
@@ -173,7 +187,7 @@ def main(argv=None):
         print("❌ אין נתוני SPY עד תאריך החיתוך - הסעיף לא עודכן.")
         return 0
     last_day = max(spy_days)
-    skipped_today = (not a.include_today) and any(d >= today for d in prices[BENCH[1]])
+    skipped_today = any(d > cutoff for d in prices[BENCH[1]])
 
     bench = compute_returns({d: p for d, p in prices[BENCH[1]].items() if d <= cutoff}, last_day)
     if not bench:
