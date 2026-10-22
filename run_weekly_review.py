@@ -110,6 +110,22 @@ def _run_optional(script_name):
         log(f"⚠️  {script_name} נכשל: {e!r}")
 
 
+def _sort_sections_by_number():
+    """סדר סעיפים לפי המספר בתחילת הכותרת (1,4,7,8,9) - אחרי שחזור/מיזוג של סעיפים."""
+    import re
+    try:
+        with open(WEEKLY_REVIEW_JSON_PATH, encoding="utf-8") as f:
+            data = json.load(f)
+        def key(sec):
+            m = re.match(r"\s*(\d+)\.", str(sec.get("title", "")))
+            return int(m.group(1)) if m else 999
+        data["sections"] = sorted(data.get("sections", []), key=key)
+        with open(WEEKLY_REVIEW_JSON_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except (OSError, json.JSONDecodeError, AttributeError) as e:
+        log(f"⚠️  מיון סעיפים נכשל: {e!r}")
+
+
 def _apply_macro_data_to_weekly_review(weekly_data, macro_data):
     """מחליף את שורות טבלת המאקרו (חוץ משורת מדד המחירים לישראל, ששורה
     0 ומגיעה כבר ממקור אוטומטי נפרד - הלמ"ס, ראה fetch_cpi_israel.py)
@@ -204,6 +220,7 @@ def main():
     _restore_rolling_sections(preserved_rolling)
     _run_optional("compute_ta125_weekly.py")
     _run_optional("us_sectors_daily.py")
+    _sort_sections_by_number()
 
     # ניתוח אנליטי (5 סעיפי טקסט חופשי + macro_data, ע"י Claude + חיפוש
     # אינטרנט) - שכבה נוספת מעל הטבלאות האוטומטיות, לא תחליף מלאה להן
