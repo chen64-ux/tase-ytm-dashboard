@@ -30,16 +30,22 @@ jobs:
         run: |
           git config user.name "tase-bot"
           git config user.email "tase-bot@users.noreply.github.com"
-          git config merge.ours.driver true
-          git add ytm_computed.xlsx docs/ytm_dashboard.html
-          if git diff --cached --quiet; then
-            echo "אין שינויים לשמור."
-          else
-            git commit -m "עדכון אוטומטי: $(date -u '+%Y-%m-%d %H:%M UTC')"
-            if ! git push; then
-              echo "push נדחה (כנראה נדחף שינוי מקומי באותו זמן) - מנסה fetch+merge..."
-              git fetch origin
-              git merge --no-edit origin/main
-              git push
+          # אם ה-push נדחה (workflow/ריצה מקומית אחרת דחפו בינתיים), לא ממזגים קבצים שנוצרו
+          # אוטומטית (xlsx/html/log) - מושכים את הגרסה העדכנית ומריצים את העדכון מחדש עליה.
+          for attempt in 1 2 3; do
+            git add ytm_computed.xlsx docs/ytm_dashboard.html run_log.txt
+            if git diff --cached --quiet; then
+              echo "אין שינויים לשמור."
+              exit 0
             fi
-          fi
+            git commit -m "עדכון אוטומטי: $(date -u '+%Y-%m-%d %H:%M UTC')"
+            if git push; then
+              exit 0
+            fi
+            echo "push נדחה (ניסיון $attempt) - מושך את הגרסה העדכנית ומריץ את העדכון מחדש עליה..."
+            git fetch origin
+            git reset --hard "origin/${GITHUB_REF_NAME}"
+            python run_daily_update.py || { echo "הרצה חוזרת נכשלה"; exit 1; }
+          done
+          echo "push נכשל אחרי 3 ניסיונות"
+          exit 1
