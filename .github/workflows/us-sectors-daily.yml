@@ -1,10 +1,15 @@
 name: US Sectors Daily (05:00 Israel)
 
 # תשואות סקטורי ארה"ב (יומי + 7 ימים מתגלגל) - ריצה ב-05:00 שעון ישראל, אחרי שוול סטריט נסגרה.
-# התזמון האוטומטי כבוי: הריצה מתבצעת מקומית ב-05:00 דרך Windows Task Scheduler (run_ta125_local.py us),
-# כי ריצות מתוזמנות ב-GitHub מתעכבות. ה-workflow נשאר להרצה ידנית (Run workflow) ולגיבוי.
-# להחזרת התזמון: להוסיף חזרה  schedule: [{cron: "0 2 * * 2-6"}, {cron: "0 3 * * 2-6"}, {cron: "0 5 * * 2-6"}]
+# תשואות סקטורי ארה"ב (יומי + 7 ימים מתגלגל) - במקביל להרצה המקומית ב-05:00 (Task Scheduler).
+# GitHub cron הוא ב-UTC, ללא שעון קיץ, ועלול להתעכב בשעות. לכן 3 הרצות (02:00, 03:00, 05:00 UTC)
+# ושלב בדיקה שמאפשר ריצה בין 05:00 ל-11:59 שעון ישראל. הסקריפט אידמפוטנטי: ריצה על אותו סשן
+# שכבר עודכן לא משנה כלום ("אין שינוי בדשבורד"). ב'-ו' בערב בניו יורק = ג'-ש' בבוקר בישראל.
 on:
+  schedule:
+    - cron: "0 2 * * 2-6"
+    - cron: "0 3 * * 2-6"
+    - cron: "0 5 * * 2-6"
   workflow_dispatch: {}
 
 concurrency:
@@ -47,21 +52,24 @@ jobs:
       - name: Update US sectors and dashboard
         if: steps.gate.outputs.run == 'true'
         run: |
-          git pull --rebase origin "${GITHUB_REF_NAME}"
-          python us_sectors_daily.py --merge-into weekly_review.json
-          python build_dashboard.py ytm_computed.xlsx \
-            --template docs/ytm_dashboard.html --out docs/ytm_dashboard.html \
-            --weekly-review weekly_review.json
           git config user.name "tase-bot"
           git config user.email "tase-bot@users.noreply.github.com"
-          git add weekly_review.json docs/ytm_dashboard.html
-          if git diff --cached --quiet; then
-            echo "אין שינוי בדשבורד."
-            exit 0
-          fi
-          git commit -m "US sectors update $(date -u +%F)"
-          for i in 1 2 3; do
-            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
-            sleep 5
+          # אם ה-push נדחה: מבטלים רק את ה-commit ואת שני הקבצים שנוצרו, מושכים ומייצרים מחדש.
+          for attempt in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" || { git rebase --abort; exit 1; }
+            python us_sectors_daily.py --merge-into weekly_review.json
+            python build_dashboard.py ytm_computed.xlsx \
+              --template docs/ytm_dashboard.html --out docs/ytm_dashboard.html \
+              --weekly-review weekly_review.json
+            git add weekly_review.json docs/ytm_dashboard.html
+            if git diff --cached --quiet; then
+              echo "אין שינוי בדשבורד."
+              exit 0
+            fi
+            git commit -m "US sectors update $(date -u +%F)"
+            git push && exit 0
+            echo "push נדחה (ניסיון $attempt) - מייצר מחדש על הגרסה העדכנית..."
+            git reset --mixed HEAD~1
+            git checkout -- weekly_review.json docs/ytm_dashboard.html
           done
           echo "push נכשל" && exit 1

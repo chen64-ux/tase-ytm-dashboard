@@ -8,10 +8,15 @@ name: TA125 Daily Collect (after close)
 # הסקריפט עצמו בודק שעה בישראל (>=19) ושתאריך הקובץ = היום, ואידמפוטנטי -
 # ריצות מיותרות מסתיימות בדילוג ירוק.
 # שבת/ימים ללא מסחר: הקובץ נכון לתאריך קודם -> דילוג אוטומטי.
-# התזמון האוטומטי כבוי: הריצה היומית מתבצעת מקומית דרך Windows Task Scheduler (run_ta125_local.py ta125),
-# כי ריצות מתוזמנות ב-GitHub מתעכבות. ה-workflow נשאר להרצה ידנית (Run workflow) ולגיבוי.
-# להחזרת התזמון: להוסיף חזרה  schedule: [{cron: "20 16 * * 1-5"}, {cron: "20 17 * * 1-5"}, {cron: "20 18 * * 1-5"}]
+# איסוף יומי של נתוני המניות אחרי סגירת המסחר (אחרי 19:00 שעון ישראל), במקביל להרצה המקומית
+# (Windows Task Scheduler - run_ta125_local.py). שתיהן אידמפוטנטיות: מי שרץ שנייה מוצא "כבר נשמר".
+# GitHub cron הוא ב-UTC ואינו מכיר שעון קיץ ועלול להתעכב; האוסף עצמו בודק שעה ותאריך:
+#   16:20 UTC = 19:20 קיץ / 18:20 חורף (הסקריפט ידלג, מוקדם מדי); 17:20; 18:20 = ניסיון חוזר.
 on:
+  schedule:
+    - cron: "20 16 * * 1-5"
+    - cron: "20 17 * * 1-5"
+    - cron: "20 18 * * 1-5"
   workflow_dispatch:
     inputs:
       force:
@@ -69,19 +74,23 @@ jobs:
       - name: Update dashboard (rolling 7 days)
         continue-on-error: true
         run: |
-          git pull --rebase origin "${GITHUB_REF_NAME}"
-          python compute_ta125_weekly.py --merge-into weekly_review.json
-          python build_dashboard.py ytm_computed.xlsx \
-            --template docs/ytm_dashboard.html --out docs/ytm_dashboard.html \
-            --weekly-review weekly_review.json
-          git add weekly_review.json docs/ytm_dashboard.html
-          if git diff --cached --quiet; then
-            echo "אין שינוי בדשבורד."
-            exit 0
-          fi
-          git commit -m "TA125 rolling 7-day update $(date -u +%F)"
-          for i in 1 2 3; do
-            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
-            sleep 5
+          # אם ה-push נדחה (ריצה מקומית/אחרת דחפה קודם): מבטלים רק את ה-commit ואת שני הקבצים שנוצרו,
+          # מושכים את הגרסה העדכנית ומייצרים מחדש (במקום למזג קבצים שנוצרו אוטומטית).
+          for attempt in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" || { git rebase --abort; exit 1; }
+            python compute_ta125_weekly.py --merge-into weekly_review.json
+            python build_dashboard.py ytm_computed.xlsx \
+              --template docs/ytm_dashboard.html --out docs/ytm_dashboard.html \
+              --weekly-review weekly_review.json
+            git add weekly_review.json docs/ytm_dashboard.html
+            if git diff --cached --quiet; then
+              echo "אין שינוי בדשבורד."
+              exit 0
+            fi
+            git commit -m "TA125 rolling 7-day update $(date -u +%F)"
+            git push && exit 0
+            echo "push נדחה (ניסיון $attempt) - מייצר מחדש על הגרסה העדכנית..."
+            git reset --mixed HEAD~1
+            git checkout -- weekly_review.json docs/ytm_dashboard.html
           done
           echo "push נכשל" && exit 1
