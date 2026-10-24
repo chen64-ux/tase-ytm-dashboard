@@ -264,10 +264,6 @@ def main(argv=None):
     now = datetime.datetime.fromisoformat(args.now) if args.now else _il_now()
     print(f"שעה בישראל: {now:%Y-%m-%d %H:%M}")
 
-    if not args.force and now.hour < args.min_hour:
-        print(f"⏭️  לפני {args.min_hour}:00 - דילוג (נאסף רק אחרי הסגירה).")
-        return 0
-
     try:
         raw = open(args.csv_file, "rb").read() if args.csv_file else download_csv_bytes()
         as_of, rows = parse_tase_csv(raw)
@@ -276,8 +272,14 @@ def main(argv=None):
         return 1
 
     print(f"נכון ל-{as_of:%d/%m/%Y}, נמצאו {len(rows)} מניות.")
-    if not args.force and as_of != now.date():
-        print(f"⏭️  אין נתוני מסחר להיום (הקובץ נכון ל-{as_of}) - יום ללא מסחר או נתונים טרם עודכנו.")
+    # נתוני היום נחשבים סופיים רק אחרי 19:00 (מסחר פעיל = מחירי ביניים). נתוני יום קודם תמיד סופיים,
+    # ולכן ריצה מאוחרת (מחשב שהיה כבוי ב-19:15, GitHub שאיחר) משלימה את היום החסר, וריצה ביום
+    # ללא מסחר פשוט מוצאת שהיום כבר נשמר.
+    if not args.force and as_of >= now.date() and now.hour < args.min_hour:
+        print(f"⏭️  הקובץ נכון להיום ({as_of}) אך השעה לפני {args.min_hour}:00 - המסחר עוד לא הסתיים, דילוג.")
+        return 0
+    if not args.force and as_of > now.date():
+        print(f"⏭️  תאריך הקובץ ({as_of}) אחרי היום - לא שומר.")
         return 0
 
     if args.weights_only:
