@@ -41,14 +41,24 @@ bizportal_banks_index.json, שנקרא בהמשך ע"י fetch_weekly_review.py
 
 שלב נוסף (שלב 0/6, מ-02/10/2026): לפני כל ריצה, בודק האם יש שינויים
 לא-מחויבים (uncommitted) בקבצים שכבר במעקב git מלבד אלה שהריצה עצמה
-אמורה לשנות (FILES_TO_PUSH) - בעיקר holdings.xlsx, שמתעדכן ידנית
-ע"י update_holdings.bat/update_holdings_and_run.bat. זה בדיוק מה
-שגרם לארבעה כשלונות רצופים ביום אחד (16/09/2026): git pull --ff-only
-נכשל עם "Your local changes... would be overwritten by merge", וזה
-חזר על עצמו בכל ריצה עד שהבעיה תוקנה ידנית. הבדיקה הזו לא עוצרת את
-הריצה (יכול להיות שינוי לגיטימי שעדיין לא הגיע זמנו) - רק מתריעה
-מראש בלוג, כדי שהאבחון יהיה מיידי במקום להתחיל מ"git pull נכשל"
-המעורפל.
+אמורה לשנות (FILES_TO_PUSH). זה בדיוק מה שגרם לארבעה כשלונות רצופים
+ביום אחד (16/09/2026): git pull --ff-only נכשל עם "Your local
+changes... would be overwritten by merge", וזה חזר על עצמו בכל ריצה
+עד שהבעיה תוקנה ידנית. הבדיקה הזו לא עוצרת את הריצה (יכול להיות גם
+שינוי לגיטימי שעדיין לא הגיע זמנו) - רק מתריעה מראש בלוג, כדי
+שהאבחון יהיה מיידי במקום להתחיל מ"git pull נכשל" המעורפל.
+
+עדכון מ-28/10/2026: holdings.xlsx (קובץ ההחזקות, שמתעדכן ידנית ע"י
+חן) הצטרף ל-FILES_TO_PUSH ול-.gitattributes (merge=ours - יש עורך
+יחיד, במחשב הזה, כך שהגרסה המקומית תמיד "נכונה"). קודם לכן הקובץ
+הזה היה דווקא הדוגמה הקלאסית לקובץ "מלוכלך" שגרם לכשל ה-pull שתואר
+למעלה (16/09/2026) - ועדכונו דרש הרצה ידנית נפרדת
+(update_holdings.bat/update_holdings_and_run.bat). מעכשיו, כל עריכה
+ידנית ל-holdings.xlsx תיכלל אוטומטית ב-commit/push של הריצה
+המתוזמנת הבאה (עד 6 פעמים ביום) - בלי צורך בהרצה ידנית נפרדת, ובלי
+שהקובץ "המלוכלך" יחסום את ה-pull. הסקריפטים הידניים עדיין קיימים
+ושימושיים אם רוצים לדחוף שינוי מיידית בלי לחכות לריצה המתוזמנת
+הבאה.
 """
 
 import datetime
@@ -93,26 +103,35 @@ BANKS_INDEX_OVERRIDE_PATH = _REPO_DIR / "bizportal_banks_index.json"
 # עודכן רק ביד ונשאר עם נתוני הדוגמה המקוריים ללא שינוי.
 WEEKLY_CPI_ISRAEL_PATH = _REPO_DIR / "weekly_cpi_israel.json"
 
-# הקבצים שריצת run_daily_update.py משנה בפועל - רק אלה נדחפים.
-# holdings.xlsx / market_pe_base.json / sector_mapping.json וכו' לא
-# נגעים כאן - אלה מתעדכנים בתהליכים נפרדים משלהם. bizportal_banks_index.json
-# ו-weekly_cpi_israel.json נכתבים ונדחפים כאן ישירות (לא ע"י
-# run_daily_update.py), אבל זה עדיין המקום הנכון כדי שייכללו באותו commit.
+# הקבצים שנדחפים בסוף כל ריצה. רובם נוצרים אוטומטית ע"י
+# run_daily_update.py; bizportal_banks_index.json ו-weekly_cpi_israel.json
+# נכתבים ונדחפים כאן ישירות (לא ע"י run_daily_update.py), אבל זה
+# עדיין המקום הנכון כדי שייכללו באותו commit. holdings.xlsx הוא היחיד
+# שנערך ידנית (ע"י חן, לא ע"י קוד) - הוא כאן כדי שעריכה ידנית תיכלל
+# אוטומטית בריצה המתוזמנת הבאה, במקום לדרוש הרצה נפרדת
+# (update_holdings.bat) ובמקום להישאר "מלוכלך" וחוסם pull (ראה
+# docstring, 16/09/2026). market_pe_base.json / sector_mapping.json
+# וכו' עדיין לא כאן - אלה מתעדכנים בתהליכים נפרדים משלהם.
 FILES_TO_PUSH = [
     "ytm_computed.xlsx",
     "docs/ytm_dashboard.html",
     "run_log.txt",
     "bizportal_banks_index.json",
     "weekly_cpi_israel.json",
+    "holdings.xlsx",
 ]
 
-# קבצים שנוצרים אוטומטית מחדש בכל ריצה (לא נערכים ידנית) - בהתנגשות
-# מול הענן, הגרסה מהריצה האחרונה תמיד מנצחת. run_log.txt מקבל
-# "union" (מאחד שורות, לא בוחר צד) כי הוא קובץ שרק מתווסף אליו.
+# אסטרטגיית מיזוג לכל קובץ: "ours" = בהתנגשות, הגרסה מהריצה המקומית
+# הזו תמיד מנצחת - נכון לקבצים שנוצרים מחדש כל ריצה (ytm_computed.xlsx,
+# הדשבורד), וגם ל-holdings.xlsx כי יש לו עורך יחיד (חן, במחשב הזה)
+# כך שאין באמת "שני צדדים" לאחד - הגרסה האחרונה שנשמרה היא תמיד
+# הנכונה. run_log.txt מקבל "union" (מאחד שורות, לא בוחר צד) כי הוא
+# קובץ שרק מתווסף אליו משני המקורות (המחשב המקומי וה-workflow בענן).
 GITATTRIBUTES_LINES = [
     "ytm_computed.xlsx merge=ours",
     "docs/ytm_dashboard.html merge=ours",
     "run_log.txt merge=union",
+    "holdings.xlsx merge=ours",
 ]
 
 # גיבוי נוסף (לא git) לתיקיית OneDrive שכבר מסונכרנת במחשב הזה - לא
@@ -166,13 +185,15 @@ def step(msg):
 
 def check_uncommitted_tracked_changes() -> None:
     """בודק אם יש שינויים לא-מחויבים (uncommitted) בקבצים שכבר במעקב
-    git, מלבד אלה שהריצה הזו עצמה אמורה לשנות (FILES_TO_PUSH) - כמו
-    holdings.xlsx, שגרם בעבר (16/09/2026) לכמה כשלונות רצופים באותו
-    יום כי git pull --ff-only נכשל עם "Your local changes... would be
-    overwritten by merge". לא עוצר את הריצה (יכול להיות גם שינוי
-    לגיטימי שעדיין לא הגיע זמנו) - רק מתריע מראש בלוג, כדי שהאבחון
-    יהיה מיידי אם ה-pull/push בהמשך הריצה הזו ייכשל, במקום להתחיל
-    מהודעת git המעורפלת."""
+    git, מלבד אלה שהריצה הזו עצמה אמורה לשנות (FILES_TO_PUSH - מאז
+    28/10/2026 כולל גם את holdings.xlsx). זה בדיוק מה שגרם בעבר
+    (16/09/2026, לפני ש-holdings.xlsx הצטרף ל-FILES_TO_PUSH) לכמה
+    כשלונות רצופים באותו יום כי git pull --ff-only נכשל עם "Your
+    local changes... would be overwritten by merge". עדיין רלוונטי
+    לכל קובץ אחר שבמעקב git ונערך ידנית מחוץ לתהליך הזה. לא עוצר את
+    הריצה (יכול להיות גם שינוי לגיטימי שעדיין לא הגיע זמנו) - רק
+    מתריע מראש בלוג, כדי שהאבחון יהיה מיידי אם ה-pull/push בהמשך
+    הריצה הזו ייכשל, במקום להתחיל מהודעת git המעורפלת."""
     result = run_git(["status", "--porcelain"])
     if result.returncode != 0:
         return
@@ -196,9 +217,8 @@ def check_uncommitted_tracked_changes() -> None:
     log_wrapper_event(
         "⚠️  נמצאו שינויים לא-מחויבים (uncommitted) בקבצים הבאים שכבר במעקב git, "
         f"לפני תחילת הריצה: {files_list} - אם ה-pull/push בהמשך הריצה הזו ייכשל, "
-        "זו כנראה הסיבה (בדיוק כמו שקרה עם holdings.xlsx ב-16/09/2026). "
-        "לתיקון: בצעי commit+push לקובץ (עבור holdings.xlsx - update_holdings_and_run.bat), "
-        "או commit/stash ידני, לפני שהריצה הבאה מתוזמנת."
+        "זו כנראה הסיבה (בדיוק כמו שקרה עם holdings.xlsx לפני שהצטרף ל-FILES_TO_PUSH, 16/09/2026). "
+        "לתיקון: בצעי commit+push ידני לקובץ, או commit/stash, לפני שהריצה הבאה מתוזמנת."
     )
     print(f"⚠️  שינויים לא-מחויבים בקבצים שבמעקב git (ראו run_daily_local_log.txt): {files_list}")
 
