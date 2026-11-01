@@ -10,57 +10,501 @@ run_daily_local.py
 
 מיועד להרצה 6 פעמים ביום, ראשון-שישי, דרך Windows Task Scheduler -
 בדיוק כמו שה-workflow tase-update.yml עשה קודם.
+
+הערה חשובה על התנגשויות: מכיוון שה-workflow בענן (tase-update.yml)
+ממשיך לרוץ במקביל וגם הוא דוחף שינויים לאותם קבצים בדיוק
+(ytm_computed.xlsx, docs/ytm_dashboard.html) - יש סיכוי אמיתי שה-push
+המקומי יתנגש עם שינוי שכבר יש ב-GitHub. בדיקה בפועל (05/09/2026)
+הראתה שגם `git merge -X ours` לא תמיד "זוכה" בקובץ הזה - כנראה כי
+כל הקוד המיוצר יושב בשורה אחת ארוכה בקובץ ה-HTML, וזה מבלבל את
+אלגוריתם ה-diff של git ברמת שורות. לכן הפתרון כאן הוא כפול:
+1. .gitattributes עם merge=ours על הקבצים האלה (יציב יותר מ--X ours).
+2. אחרי כל merge - בדיקה מפורשת שהתוכן בפועל תואם למה שהריצה הזו
+   יצרה, ואם לא - "כפיית" הגרסה המקומית עם commit מתקן. כך גם אם
+   הדרך הראשונה נכשלת מסיבה כלשהי, יש רשת ביטחון.
+
+בסוף כל ריצה יש גם גיבוי נוסף, לא-קריטי ולא תלוי בגיט, לתיקיית
+OneDrive מקומית (ראה ONEDRIVE_BACKUP_DIR) - עותק מראה (mirror) של כל
+התיקייה חוץ מ-.git/__pycache__/downloads.
+
+שלב נוסף (שלב 2/5) שולף מקומית מביזפורטל את השינוי השבועי של מדד
+ת"א בנקים (ראה BIZPORTAL_BANKS_INDEX_ID/fetch_banks_index_override) -
+כי ל-Yahoo אין נתונים אמינים לטיקר הזה - וכותב אותו ל-
+bizportal_banks_index.json, שנקרא בהמשך ע"י fetch_weekly_review.py
+דרך weekly-review-update.yml בענן.
+
+שלב נוסף (שלב 4/6, מ-20/09/2026) שולף מקומית מהלמ"ס את מדד המחירים
+לצרכן (ראה fetch_cpi_israel.py) וכותב אותו ל-weekly_cpi_israel.json -
+עד עכשיו הקובץ הזה עודכן רק ידנית ונשאר תקוע עם נתוני הדוגמה
+המקוריים מאז הקמת הפרויקט, כך שטבלת המאקרו בסקירה השבועית הציגה כל
+שבוע בדיוק אותם נתונים ישנים.
+
+שלב נוסף (שלב 0/6, מ-02/10/2026): לפני כל ריצה, בודק האם יש שינויים
+לא-מחויבים (uncommitted) בקבצים שכבר במעקב git מלבד אלה שהריצה עצמה
+אמורה לשנות (FILES_TO_PUSH). זה בדיוק מה שגרם לארבעה כשלונות רצופים
+ביום אחד (16/09/2026): git pull --ff-only נכשל עם "Your local
+changes... would be overwritten by merge", וזה חזר על עצמו בכל ריצה
+עד שהבעיה תוקנה ידנית. הבדיקה הזו לא עוצרת את הריצה (יכול להיות גם
+שינוי לגיטימי שעדיין לא הגיע זמנו) - רק מתריעה מראש בלוג, כדי
+שהאבחון יהיה מיידי במקום להתחיל מ"git pull נכשל" המעורפל.
+
+עדכון מ-28/10/2026: holdings.xlsx (קובץ ההחזקות, שמתעדכן ידנית ע"י
+חן) הצטרף ל-FILES_TO_PUSH ול-.gitattributes (merge=ours). קודם לכן
+הקובץ הזה היה דווקא הדוגמה הקלאסית לקובץ "מלוכלך" שגרם לכשל ה-pull
+שתואר למעלה (16/09/2026) - ועדכונו דרש הרצה ידנית נפרדת
+(update_holdings.bat/update_holdings_and_run.bat). מעכשיו, כל עריכה
+ידנית ל-holdings.xlsx (בתיקיית הפרויקט על המחשב הזה) תיכלל אוטומטית
+ב-commit/push של הריצה המתוזמנת הבאה (עד 6 פעמים ביום) - בלי צורך
+בהרצה ידנית נפרדת, ובלי שהקובץ "המלוכלך" יחסום את ה-pull. הסקריפטים
+הידניים עדיין קיימים ושימושיים אם רוצים לדחוף שינוי מיידית בלי לחכות
+לריצה המתוזמנת הבאה.
+
+עדכון מ-01/11/2026 (שלב 2/7, sync_holdings_from_onedrive): חן עורך
+את holdings.xlsx ממספר מחשבים שונים, לא רק מ-chensurfacepro7 (המחשב
+שמריץ את האוטומציה) - כולם מחוברים לאותו חשבון OneDrive. עריכה כזו
+נעשית ישירות בתוך תיקיית הגיבוי הקיימת ב-OneDrive
+(ONEDRIVE_BACKUP_DIR/holdings.xlsx), שכבר מסתנכרנת אוטומטית בין כל
+המחשבים (לא בתיקיית הפרויקט עצמה - זו קיימת רק על chensurfacepro7).
+לפני כל ריצה, אם העותק שם חדש יותר מהעותק המקומי בתיקיית הפרויקט -
+הוא מועתק לכאן, כך שהריצה (ודחיפת holdings.xlsx ל-GitHub שבהמשכה)
+תמיד מתבססת על העדכון האחרון מכל אחד מהמחשבים. כיוון ההעתקה ההפוך
+(פרויקט -> OneDrive) ממשיך להתבצע כרגיל בסוף הריצה ע"י
+backup_to_onedrive() הקיים, כך שהקובץ נשאר מסונכרן בשני הכיוונים בלי
+קוד כפול. הערה: אם שני מחשבים עורכים את אותו קובץ ממש באותו חלון
+זמן קצר (לפני שה-OneDrive sync הספיק להתעדכן) - זה עדיין סיכון רגיל
+של קובץ Excel משותף יחיד, לא משהו שהקוד הזה פותר; OneDrive בעצמו
+יוצר "עותק מתנגש" (conflicted copy) אם זה קורה.
 """
 
+import datetime
+import json
+import os
 import pathlib
+import shutil
 import subprocess
 import sys
+import traceback
+
+import fetch_cpi_israel
+import fetch_pe
+
+# כש-Task Scheduler מריץ את הסקריפט (ללא חלון קונסולה), ה-stdout
+# לפעמים לא תומך ב-UTF-8 (עברית/אימוג'ים) ו-print() רגיל יכול לקרוס
+# עם UnicodeEncodeError - וזה קורס בשקט לפני שאפילו מגיעים להרצת
+# run_daily_update.py, בלי שום עקבות בשום לוג. לכן קודם כל דואגים
+# שה-stdout/stderr תמיד יעבדו ב-UTF-8, גם אם משהו לא ניתן להצגה.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 _REPO_DIR = pathlib.Path(__file__).parent
 RUN_DAILY_UPDATE_SCRIPT = _REPO_DIR / "run_daily_update.py"
+WRAPPER_LOG_PATH = _REPO_DIR / "run_daily_local_log.txt"
+GITATTRIBUTES_PATH = _REPO_DIR / ".gitattributes"
+GIT_BRANCH = "main"
 
-# הקבצים שריצת run_daily_update.py משנה בפועל - רק אלה נדחפים.
-# holdings.xlsx / market_pe_base.json / sector_mapping.json וכו' לא
-# נגעים כאן - אלה מתעדכנים בתהליכים נפרדים משלהם.
-FILES_TO_PUSH = ["ytm_computed.xlsx", "docs/ytm_dashboard.html", "run_log.txt"]
+# מדד ת"א בנקים ב-Yahoo (TA-BANKS.TA) מחזיר נתונים דלילים מדי (ראה
+# fetch_weekly_review.py, תוקן 19/09/2026) - נשלף כאן מקומית מביזפורטל
+# (עמוד index_id=751) ונכתב לקובץ קטן, כדי שfetch_weekly_review.py
+# בענן (weekly-review-update.yml) יוכל להשתמש בו כ-override כשYahoo
+# נכשל לספק נתון אמין. לא קריטי: כשל כאן רק נרשם ליומן.
+BIZPORTAL_BANKS_INDEX_ID = "751"
+BANKS_INDEX_OVERRIDE_PATH = _REPO_DIR / "bizportal_banks_index.json"
+
+# מדד המחירים לצרכן (הלמ"ס) - נשלף כאן מקומית (חסום מ-GitHub Actions,
+# כמו ביזפורטל ובנק ישראל - ראה fetch_cpi_israel.py) ונכתב לקובץ
+# הידני שrun_weekly_review.py כבר יודע לקרוא. עד 20/09/2026 הקובץ הזה
+# עודכן רק ביד ונשאר עם נתוני הדוגמה המקוריים ללא שינוי.
+WEEKLY_CPI_ISRAEL_PATH = _REPO_DIR / "weekly_cpi_israel.json"
+
+# קובץ ההחזקות בתיקיית הפרויקט עצמה (זה מה ש-run_daily_update.py
+# קורא בפועל, וזה מה שנדחף ל-GitHub כחלק מ-FILES_TO_PUSH).
+HOLDINGS_XLSX_PATH = _REPO_DIR / "holdings.xlsx"
+
+# הקבצים שנדחפים בסוף כל ריצה. רובם נוצרים אוטומטית ע"י
+# run_daily_update.py; bizportal_banks_index.json ו-weekly_cpi_israel.json
+# נכתבים ונדחפים כאן ישירות (לא ע"י run_daily_update.py), אבל זה
+# עדיין המקום הנכון כדי שייכללו באותו commit. holdings.xlsx הוא היחיד
+# שנערך ידנית (ע"י חן, לא ע"י קוד) - הוא כאן כדי שעריכה ידנית תיכלל
+# אוטומטית בריצה המתוזמנת הבאה, במקום לדרוש הרצה נפרדת
+# (update_holdings.bat) ובמקום להישאר "מלוכלך" וחוסם pull (ראה
+# docstring, 16/09/2026). market_pe_base.json / sector_mapping.json
+# וכו' עדיין לא כאן - אלה מתעדכנים בתהליכים נפרדים משלהם.
+FILES_TO_PUSH = [
+    "ytm_computed.xlsx",
+    "docs/ytm_dashboard.html",
+    "run_log.txt",
+    "bizportal_banks_index.json",
+    "weekly_cpi_israel.json",
+    "holdings.xlsx",
+]
+
+# אסטרטגיית מיזוג לכל קובץ: "ours" = בהתנגשות, הגרסה מהריצה המקומית
+# הזו תמיד מנצחת - נכון לקבצים שנוצרים מחדש כל ריצה (ytm_computed.xlsx,
+# הדשבורד), וגם ל-holdings.xlsx: למרות שחן עורך אותו ממספר מחשבים
+# (ראה sync_holdings_from_onedrive), מי שבאמת מבצע git commit לקובץ
+# הזה זה תמיד chensurfacepro7 בלבד, אחרי שכבר סינכרן לעצמו את הגרסה
+# העדכנית ביותר מ-OneDrive - כך שגם כאן, מבחינת git, יש בפועל "צד"
+# יחיד שמבצע את ה-commit, והגרסה האחרונה שנשמרה היא תמיד הנכונה.
+# run_log.txt מקבל "union" (מאחד שורות, לא בוחר צד) כי הוא קובץ שרק
+# מתווסף אליו משני המקורות (המחשב המקומי וה-workflow בענן).
+GITATTRIBUTES_LINES = [
+    "ytm_computed.xlsx merge=ours",
+    "docs/ytm_dashboard.html merge=ours",
+    "run_log.txt merge=union",
+    "holdings.xlsx merge=ours",
+]
+
+# גיבוי נוסף (לא git) לתיקיית OneDrive שכבר מסונכרנת במחשב הזה - לא
+# תחליף ל-GitHub (שהוא ה-source of truth וממשיך להיות מנגנון ה-push
+# העיקרי), אלא רשת ביטחון עצמאית שלא תלויה בגיט בכלל. .git עצמו לא
+# מגובה כאן (הוא כבר מגובה דרך GitHub, וסנכרון OneDrive על תיקיית
+# .git פעילה עלול להתנגש עם כתיבות git ולגרום לשחיתות).
+ONEDRIVE_BACKUP_DIR = pathlib.Path(r"C:\Users\chen\OneDrive\tase-ytm-dashboard-backup")
+ONEDRIVE_BACKUP_EXCLUDE_DIRS = [".git", "__pycache__", "downloads"]
+
+# עותק ה-holdings.xlsx בתיקיית הגיבוי ב-OneDrive - מאז 01/11/2026 הוא
+# לא רק יעד גיבוי אלא גם מקור קלט אפשרי: חן עורך את הקובץ ממספר
+# מחשבים שמחוברים לאותו חשבון OneDrive, ולא רק מ-chensurfacepro7
+# (ראה sync_holdings_from_onedrive).
+ONEDRIVE_HOLDINGS_PATH = ONEDRIVE_BACKUP_DIR / "holdings.xlsx"
+
+
+def log_wrapper_event(text: str) -> None:
+    """כותב שורת אבחון לקובץ ייעודי - כדי שכשל (או פרטי דיבוג) לא
+    ייעלמו בשקט בריצה מתוזמנת שאף אחד לא צופה בה."""
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        with open(WRAPPER_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(f"[{timestamp}] {text}\n")
+    except Exception:
+        pass
+
+
+def log_wrapper_failure(exc: BaseException) -> None:
+    log_wrapper_event("run_daily_local.py נכשל:\n" + traceback.format_exc())
+
+
+def run_git(args, check=False):
+    """מריץ פקודת git, לוכד stdout/stderr (כדי שיהיה מה לאבחן אם
+    זה נכשל), ומחזיר את ה-CompletedProcess."""
+    result = subprocess.run(
+        ["git"] + args,
+        cwd=str(_REPO_DIR),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if result.returncode != 0:
+        log_wrapper_event(
+            f"git {' '.join(args)} -> קוד יציאה {result.returncode}\n"
+            f"--- stdout ---\n{result.stdout}\n--- stderr ---\n{result.stderr}"
+        )
+    if check and result.returncode != 0:
+        raise RuntimeError(f"git {' '.join(args)} נכשל (קוד יציאה {result.returncode})")
+    return result
 
 
 def step(msg):
     print(f"\n=== {msg} ===")
 
 
-def run_daily_update():
-    result = subprocess.run([sys.executable, str(RUN_DAILY_UPDATE_SCRIPT)], cwd=str(_REPO_DIR))
+def check_uncommitted_tracked_changes() -> None:
+    """בודק אם יש שינויים לא-מחויבים (uncommitted) בקבצים שכבר במעקב
+    git, מלבד אלה שהריצה הזו עצמה אמורה לשנות (FILES_TO_PUSH - מאז
+    28/10/2026 כולל גם את holdings.xlsx). זה בדיוק מה שגרם בעבר
+    (16/09/2026, לפני ש-holdings.xlsx הצטרף ל-FILES_TO_PUSH) לכמה
+    כשלונות רצופים באותו יום כי git pull --ff-only נכשל עם "Your
+    local changes... would be overwritten by merge". עדיין רלוונטי
+    לכל קובץ אחר שבמעקב git ונערך ידנית מחוץ לתהליך הזה. לא עוצר את
+    הריצה (יכול להיות גם שינוי לגיטימי שעדיין לא הגיע זמנו) - רק
+    מתריע מראש בלוג, כדי שהאבחון יהיה מיידי אם ה-pull/push בהמשך
+    הריצה הזו ייכשל, במקום להתחיל מהודעת git המעורפלת."""
+    result = run_git(["status", "--porcelain"])
     if result.returncode != 0:
+        return
+
+    files_to_push_normalized = {f.replace("\\", "/") for f in FILES_TO_PUSH}
+    dirty_files = []
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        status_code, filename = line[:2], line[3:].strip()
+        if status_code.strip() == "??":  # קובץ לא-במעקב בכלל - לא רלוונטי כאן
+            continue
+        if filename.replace("\\", "/") in files_to_push_normalized:
+            continue
+        dirty_files.append(filename)
+
+    if not dirty_files:
+        return
+
+    files_list = ", ".join(dirty_files)
+    log_wrapper_event(
+        "⚠️  נמצאו שינויים לא-מחויבים (uncommitted) בקבצים הבאים שכבר במעקב git, "
+        f"לפני תחילת הריצה: {files_list} - אם ה-pull/push בהמשך הריצה הזו ייכשל, "
+        "זו כנראה הסיבה (בדיוק כמו שקרה עם holdings.xlsx לפני שהצטרף ל-FILES_TO_PUSH, 16/09/2026). "
+        "לתיקון: בצעי commit+push ידני לקובץ, או commit/stash, לפני שהריצה הבאה מתוזמנת."
+    )
+    print(f"⚠️  שינויים לא-מחויבים בקבצים שבמעקב git (ראו run_daily_local_log.txt): {files_list}")
+
+
+def ensure_git_merge_config():
+    """חד-פעמי ואידמפוטנטי: רושם את ה-driver 'ours' בהגדרות git
+    המקומיות (לא ניתן להגדיר את זה רק דרך .gitattributes), ומוודא
+    שהקובץ .gitattributes עצמו קיים וב-git עם השורות הנדרשות. אם היה
+    צריך ליצור/לעדכן אותו - עושה לכך commit+push קטן ונפרד."""
+    run_git(["config", "merge.ours.driver", "true"])
+
+    existing = GITATTRIBUTES_PATH.read_text(encoding="utf-8") if GITATTRIBUTES_PATH.exists() else ""
+    missing = [line for line in GITATTRIBUTES_LINES if line not in existing]
+    if not missing:
+        return
+
+    with open(GITATTRIBUTES_PATH, "a", encoding="utf-8") as f:
+        if existing and not existing.endswith("\n"):
+            f.write("\n")
+        for line in missing:
+            f.write(line + "\n")
+
+    run_git(["add", ".gitattributes"], check=True)
+    commit = run_git(["commit", "-m", "Configure merge strategy for auto-generated files"])
+    if commit.returncode == 0:
+        push = run_git(["push"])
+        if push.returncode != 0:
+            log_wrapper_event("push של .gitattributes נכשל - ינסה שוב בריצה הבאה (לא קריטי).")
+
+
+def pull_latest_before_run():
+    """מושך מ-GitHub לפני שמתחילים - כדי לצמצם (לא לחסל לגמרי, יש
+    עדיין חלון זמן) את הסיכוי להתנגשות בסוף הריצה. לא קריטי אם זה
+    נכשל (למשל אין רשת רגעית) - ממשיכים בכל מקרה."""
+    result = run_git(["pull", "--ff-only"])
+    if result.returncode != 0:
+        print("⚠️  git pull בתחילת הריצה לא הצליח (ממשיכים בכל זאת).")
+
+
+def run_daily_update():
+    # capture_output=True: בלעדיו, אם run_daily_update.py קורס עוד לפני
+    # שהוא מצליח לפתוח את run_log.txt (למשל PermissionError חד-פעמי -
+    # קרה בפועל ב-07/09/2026), ה-traceback האמיתי הולך ל-stderr של
+    # תהליך שרץ בלי חלון קונסולה (Task Scheduler) - כלומר נעלם לגמרי,
+    # ונשארת רק הודעת "קוד יציאה 1" הגנרית בלי שום מידע לאבחון.
+    # PYTHONIOENCODING: הגנה כפולה בנוסף ל-sys.stdout.reconfigure() שכבר
+    # קיים בתוך run_daily_update.py עצמו - קובעת את קידוד ברירת המחדל
+    # של ה-stdout/stderr של התהליך הבן עוד לפני שהוא בכלל מתחיל לרוץ.
+    env = os.environ.copy()
+    env["PYTHONIOENCODING"] = "utf-8"
+    result = subprocess.run(
+        [sys.executable, str(RUN_DAILY_UPDATE_SCRIPT)],
+        cwd=str(_REPO_DIR),
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+        env=env,
+    )
+    if result.returncode != 0:
+        log_wrapper_event(
+            f"run_daily_update.py נכשל (קוד יציאה {result.returncode})\n"
+            f"--- stdout ---\n{result.stdout}\n--- stderr ---\n{result.stderr}"
+        )
         raise RuntimeError(f"run_daily_update.py נכשל (קוד יציאה {result.returncode})")
 
 
 def git_commit_and_push() -> bool:
-    subprocess.run(["git", "add"] + FILES_TO_PUSH, cwd=str(_REPO_DIR), check=True)
+    run_git(["add"] + FILES_TO_PUSH, check=True)
 
     diff = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=str(_REPO_DIR))
     if diff.returncode == 0:
         print("אין שינוי לעומת מה שכבר ב-GitHub.")
         return False
 
-    subprocess.run(
-        ["git", "commit", "-m", "Daily local update (bizportal/BOI blocked from GitHub)"],
-        cwd=str(_REPO_DIR), check=True,
+    run_git(["commit", "-m", "Daily local update (bizportal/BOI blocked from GitHub)"], check=True)
+    our_commit = run_git(["rev-parse", "HEAD"], check=True).stdout.strip()
+
+    push = run_git(["push"])
+    if push.returncode == 0:
+        print("✅ נדחף ל-GitHub בהצלחה.")
+        return True
+
+    print(
+        "⚠️  git push נכשל - כנראה שה-workflow בענן דחף באותו זמן שינוי לאותם קבצים "
+        "(ytm_computed.xlsx / הדשבורד). מנסה לאחד אוטומטית עם הגרסה מהריצה הזו..."
     )
-    subprocess.run(["git", "push"], cwd=str(_REPO_DIR), check=True)
-    print("✅ נדחף ל-GitHub בהצלחה.")
+
+    run_git(["fetch", "origin"], check=True)
+    merge = run_git(["merge", "--no-edit", f"origin/{GIT_BRANCH}"])
+    if merge.returncode != 0:
+        run_git(["merge", "--abort"])
+        raise RuntimeError("git merge נכשל - נדרשת בדיקה ידנית (git status במחשב)")
+
+    # ביטחון כפול: לא סומכים רק על .gitattributes/merge=ours - בודקים
+    # בפועל שהקבצים המיוצרים אוטומטית עדיין תואמים למה שהריצה הזו
+    # יצרה, ואם המיזוג בכל זאת "בחר" בטעות בגרסה מהענן - כופים את
+    # הגרסה המקומית ומוסיפים commit מתקן.
+    run_git(["checkout", our_commit, "--"] + FILES_TO_PUSH, check=True)
+    run_git(["add"] + FILES_TO_PUSH, check=True)
+    fixup_diff = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=str(_REPO_DIR))
+    if fixup_diff.returncode != 0:
+        run_git(["commit", "-m", "Ensure local run's generated files win after merge"], check=True)
+        log_wrapper_event("המיזוג האוטומטי לא שמר על הגרסה המקומית - תוקן עם commit נוסף.")
+
+    push2 = run_git(["push"])
+    if push2.returncode != 0:
+        raise RuntimeError("git push נכשל גם אחרי merge אוטומטי - נדרשת בדיקה ידנית")
+
+    print("✅ נדחף ל-GitHub בהצלחה (אחרי איחוד אוטומטי עם השינוי שהיה בענן).")
     return True
 
 
+def fetch_banks_index_override() -> None:
+    """שולף את השינוי השבועי של מדד ת"א בנקים מביזפורטל (עובד רק
+    מהמחשב המקומי - חסום מ-GitHub Actions) וכותב אותו ל-
+    bizportal_banks_index.json. לא קריטי: כשל כאן רק נרשם ליומן,
+    ואם הקובץ כבר קיים מריצה קודמת הוא פשוט נשאר כמו שהוא."""
+    pct, err = fetch_pe.fetch_index_weekly_change(BIZPORTAL_BANKS_INDEX_ID)
+    if err:
+        log_wrapper_event(f"⚠️  שליפת מדד ת\"א בנקים מביזפורטל נכשלה: {err}")
+        return
+    data = {
+        "pct": pct,
+        "as_of": datetime.date.today().isoformat(),
+        "source": f"bizportal index {BIZPORTAL_BANKS_INDEX_ID}",
+    }
+    with open(BANKS_INDEX_OVERRIDE_PATH, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"✅ מדד ת\"א בנקים (ביזפורטל): {pct * 100:+.2f}% שבועי.")
+
+
+def update_weekly_cpi_israel() -> None:
+    """שולף מהלמ"ס (עובד רק מהמחשב המקומי - חסום מ-GitHub Actions) את
+    השינוי החודשי/שנתי העדכני של מדד המחירים לצרכן, וכותב אותו ל-
+    weekly_cpi_israel.json - עד עכשיו הקובץ הזה עודכן רק ידנית ונשאר
+    תקוע עם נתוני הדוגמה המקוריים. לא קריטי: כשל כאן רק נרשם ליומן,
+    ואם הקובץ כבר קיים מריצה קודמת הוא פשוט נשאר כמו שהוא."""
+    result, err = fetch_cpi_israel.fetch_and_summarize()
+    if err:
+        log_wrapper_event(f"⚠️  עדכון מדד המחירים לצרכן (למ\"ס) נכשל: {err}")
+        return
+    with open(WEEKLY_CPI_ISRAEL_PATH, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print(f"✅ מדד המחירים לצרכן (למ\"ס): {result['value']} - {result['note']}")
+
+
+def sync_holdings_from_onedrive() -> None:
+    """מאפשרת לערוך את holdings.xlsx ממספר מחשבים: אם העותק בתיקיית
+    הגיבוי ב-OneDrive (שמסתנכרנת אוטומטית בין כל המחשבים המחוברים
+    לאותו חשבון OneDrive) חדש יותר מהעותק המקומי כאן בתיקיית
+    הפרויקט - מעתיקים אותו לכאן, כדי שהריצה הזו (ודחיפת holdings.xlsx
+    ל-GitHub שבהמשכה, דרך FILES_TO_PUSH) תתבסס על העדכון שנערך
+    במחשב האחר. אם העותק המקומי חדש יותר או זהה (למשל נערך כאן
+    ישירות, או ב-update_holdings.bat) - לא נוגעים בו; הוא ממילא
+    יסונכרן בחזרה ל-OneDrive בסוף הריצה ע"י backup_to_onedrive(),
+    כך שאין צורך "לדחוף" גם בכיוון הזה כאן. סף של 5 שניות בהשוואת
+    הזמנים - כדי לא "לקפוץ" בגלל רעש קטן בזמני קבצים בין שירותי
+    סנכרון/דיסקים שונים. לא קריטי: כשל או העדר תיקיית/קובץ OneDrive
+    רק נרשמים ליומן ולא מפילים את שאר הריצה - ממשיכים פשוט עם
+    העותק המקומי הקיים."""
+    if not ONEDRIVE_BACKUP_DIR.exists():
+        log_wrapper_event(
+            f"⚠️  תיקיית ה-OneDrive {ONEDRIVE_BACKUP_DIR} לא נמצאה - מדלג על סנכרון holdings.xlsx ממנה."
+        )
+        return
+    if not ONEDRIVE_HOLDINGS_PATH.exists():
+        return  # אין שם עדיין עותק (למשל לפני הריצה הראשונה אחרי הפעלת הפיצ'ר) - לא חריג.
+
+    if not HOLDINGS_XLSX_PATH.exists():
+        shutil.copy2(ONEDRIVE_HOLDINGS_PATH, HOLDINGS_XLSX_PATH)
+        print("✅ holdings.xlsx לא היה קיים מקומית - הועתק מ-OneDrive.")
+        log_wrapper_event("holdings.xlsx הועתק מ-OneDrive (לא היה קיים מקומית).")
+        return
+
+    onedrive_mtime = ONEDRIVE_HOLDINGS_PATH.stat().st_mtime
+    local_mtime = HOLDINGS_XLSX_PATH.stat().st_mtime
+    if onedrive_mtime > local_mtime + 5:
+        shutil.copy2(ONEDRIVE_HOLDINGS_PATH, HOLDINGS_XLSX_PATH)
+        print("✅ holdings.xlsx עודכן ממחשב אחר (OneDrive) - הועתק לכאן לפני הריצה.")
+        log_wrapper_event("holdings.xlsx סונכרן מ-OneDrive (העותק שם היה חדש יותר מהמקומי).")
+
+
+def backup_to_onedrive() -> None:
+    """מראה (mirror) את כל תיקיית הפרויקט לתיקיית הגיבוי ב-OneDrive,
+    חוץ מ-.git/__pycache__/downloads. לא קריטי: כשל כאן רק נרשם ליומן
+    ולא מפיל את שאר הריצה - זה שכבת גיבוי נוספת, לא הפייפליין העיקרי."""
+    if not ONEDRIVE_BACKUP_DIR.exists():
+        log_wrapper_event(
+            f"⚠️  תיקיית הגיבוי {ONEDRIVE_BACKUP_DIR} לא נמצאה - מדלג על גיבוי ה-OneDrive."
+        )
+        return
+
+    args = ["robocopy", str(_REPO_DIR), str(ONEDRIVE_BACKUP_DIR), "/MIR"]
+    for d in ONEDRIVE_BACKUP_EXCLUDE_DIRS:
+        args += ["/XD", str(_REPO_DIR / d)]
+    args += ["/R:1", "/W:1", "/NFL", "/NDL", "/NP"]
+
+    result = subprocess.run(args, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    # robocopy: 0-7 = הצלחה (סוגי שינוי שונים), 8+ = כשל אמיתי.
+    if result.returncode >= 8:
+        log_wrapper_event(
+            f"⚠️  גיבוי ל-OneDrive נכשל (robocopy קוד יציאה {result.returncode})\n"
+            f"--- stdout ---\n{result.stdout}\n--- stderr ---\n{result.stderr}"
+        )
+    else:
+        print(f"✅ גובה ל-OneDrive בהצלחה (robocopy קוד יציאה {result.returncode}).")
+
+
 def main():
-    step("שלב 1/2: מריץ את run_daily_update.py המקומי")
+    ensure_git_merge_config()
+
+    step("שלב 0/7: בודק שינויים מקומיים לא-מחויבים בקבצים שבמעקב git")
+    try:
+        check_uncommitted_tracked_changes()
+    except Exception as exc:
+        log_wrapper_event(f"⚠️  בדיקת שינויים לא-מחויבים נכשלה עם חריגה: {exc}")
+
+    step("שלב 1/7: מושך עדכונים אחרונים מ-GitHub")
+    pull_latest_before_run()
+
+    step("שלב 2/7: מסנכרן את holdings.xlsx מ-OneDrive (אם עודכן ממחשב אחר)")
+    try:
+        sync_holdings_from_onedrive()
+    except Exception as exc:
+        log_wrapper_event(f"⚠️  סנכרון holdings.xlsx מ-OneDrive נכשל עם חריגה: {exc}")
+
+    step("שלב 3/7: מריץ את run_daily_update.py המקומי")
     run_daily_update()
 
-    step("שלב 2/2: דוחף את התוצאה ל-GitHub")
+    step("שלב 4/7: שולף מדד ת\"א בנקים מביזפורטל (עבור הסקירה השבועית)")
+    try:
+        fetch_banks_index_override()
+    except Exception as exc:
+        log_wrapper_event(f"⚠️  שליפת מדד ת\"א בנקים נכשלה עם חריגה: {exc}")
+
+    step("שלב 5/7: מעדכן מדד המחירים לצרכן מהלמ\"ס (עבור הסקירה השבועית)")
+    try:
+        update_weekly_cpi_israel()
+    except Exception as exc:
+        log_wrapper_event(f"⚠️  עדכון מדד המחירים לצרכן נכשל עם חריגה: {exc}")
+
+    step("שלב 6/7: דוחף את התוצאה ל-GitHub")
     git_commit_and_push()
+
+    step("שלב 7/7: מגבה ל-OneDrive")
+    try:
+        backup_to_onedrive()
+    except Exception as exc:
+        log_wrapper_event(f"⚠️  גיבוי ל-OneDrive נכשל עם חריגה: {exc}")
 
     print("\n🎉 הריצה היומית המקומית הושלמה.")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except BaseException as exc:
+        log_wrapper_failure(exc)
+        raise
