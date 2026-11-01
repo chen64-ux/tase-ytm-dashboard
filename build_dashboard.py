@@ -106,6 +106,20 @@ def extract_template_raw(template_html):
     return raw, usd_rate, usd_date
 
 
+def extract_prev_dict_const(template_html, const_name):
+    """מחלץ ערך JSON קודם של קבוע const/let X = {...}; מהדשבורד הקודם
+    (התבנית) - לשימוש כ-fallback כששליפה חיה (ביזפורטל וכו') נכשלת
+    או חסומה (למשל מ-GitHub Actions), כדי לא לדרוס נתונים חיים טובים
+    בערך ריק/null. מחזיר {} אם הקבוע לא נמצא או שהפענוח נכשל."""
+    m = re.search(r"(?:const|let)\s+%s\s*=\s*(\{.*?\});" % re.escape(const_name), template_html, re.S)
+    if not m:
+        return {}
+    try:
+        return json.loads(m.group(1))
+    except json.JSONDecodeError:
+        return {}
+
+
 def build_usd_cache(prev_raw):
     """sec_id -> (usd_rate_issue, usd_rate_issue_date) מהדשבורד הקודם"""
     cache = {}
@@ -541,6 +555,15 @@ def main():
         print(f"✅ עודכנו {len(non_conv)} אג\"ח שאינן ניתנות להמרה (טאב נפרד).")
 
         bizportal_bonds = fetch_bizportal_bonds(log_func=print)
+        if not bizportal_bonds:
+            prev_bizportal_bonds = extract_prev_dict_const(template_html, "BIZPORTAL_BONDS")
+            if prev_bizportal_bonds:
+                bizportal_bonds = prev_bizportal_bonds
+                print(
+                    f"⚠️  שליפת ביזפורטל נכשלה לגמרי בריצה הזו - נשמרו {len(prev_bizportal_bonds)} "
+                    f"הרשומות מהדשבורד הקודם (לא נדרסות בערך ריק).",
+                    file=sys.stderr,
+                )
         bizportal_json = json.dumps(bizportal_bonds, ensure_ascii=False)
         new_html = re.sub(
             r"const BIZPORTAL_BONDS = \{.*?\};",
@@ -575,6 +598,26 @@ def main():
         israeli_stock_ids = [s["sec_id"] for s in stocks_holdings if s.get("currency") == "₪" and s.get("sec_id")]
         if israeli_stock_ids:
             stock_pe_live = fetch_pe_for_securities(israeli_stock_ids, log_func=print)
+            # fetch_pe_for_securities מחזיר ערך לכל sec_id גם בכישלון
+            # (pe=None, sector=None) - לכן, בניגוד ל-BIZPORTAL_BONDS,
+            # כישלון לא מזוהה לפי "dict ריק" אלא לפי ערך per-security.
+            # לכל מניה שהשליפה החיה שלה נכשלה הפעם - משתמשים בערך
+            # הקודם מהדשבורד הקודם (אם קיים), במקום לדרוס אותו ב-null.
+            prev_stock_pe_live = extract_prev_dict_const(template_html, "STOCK_PE_LIVE")
+            fallback_count = 0
+            for sid in israeli_stock_ids:
+                cur = stock_pe_live.get(sid) or {}
+                if cur.get("pe") is None and cur.get("sector") is None:
+                    prev = prev_stock_pe_live.get(sid)
+                    if prev and (prev.get("pe") is not None or prev.get("sector") is not None):
+                        stock_pe_live[sid] = prev
+                        fallback_count += 1
+            if fallback_count:
+                print(
+                    f"⚠️  {fallback_count} מניות: השליפה מביזפורטל נכשלה הפעם - נשמר המכפיל/ענף "
+                    f"הקודם מהדשבורד הקודם (לא נדרס בערך ריק).",
+                    file=sys.stderr,
+                )
             pe_json = json.dumps(stock_pe_live, ensure_ascii=False)
             new_html = re.sub(r"const STOCK_PE_LIVE = \{.*?\};", f"const STOCK_PE_LIVE = {pe_json};",
                                new_html, count=1, flags=re.S)

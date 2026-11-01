@@ -85,6 +85,13 @@ def fetch_yahoo_range(ticker, start_date, end_date):
     מחזיר (start_close, end_close, error). שולף חלון רחב יותר מהטווח
     המבוקש (ימים נוספים משני הצדדים) כדי להתמודד עם סופי שבוע/חגים
     שאין בהם מסחר, ובוחר את מחיר הסגירה הקרוב ביותר לכל קצה.
+
+    הגנה חשובה (נוספה 19/09/2026 - "ת"א בנקים" הציג 0% במקום שינוי
+    אמיתי): אם הנקודה שנבחרה כ"תחילת שבוע" והנקודה שנבחרה כ"סוף שבוע"
+    הן בפועל אותו יום מסחר בדיוק - למשל כי לטיקר הזה יש ב-Yahoo נתונים
+    דלילים/לא מעודכנים וכל הנקודות בטווח מתכנסות לנקודה יחידה (או
+    כמעט יחידה) - זו לא באמת "שינוי שבועי של 0%", אלא כשל שליפה
+    שמתחפש לנתון תקין. מטופל כשגיאה מפורשת בשורה בדשבורד, לא כ-0% דומם.
     """
     period1 = _to_ts(start_date) - 5 * 86400
     period2 = _to_ts(end_date) + 2 * 86400
@@ -107,11 +114,22 @@ def fetch_yahoo_range(ticker, start_date, end_date):
              for ts, c in zip(timestamps, closes) if c is not None]
     if not pairs:
         return None, None, "אין נתונים בטווח המבוקש"
+    if len(pairs) < 2:
+        return None, None, (
+            f"נמצאה רק נקודת נתונים אחת בטווח ({pairs[0][0]}) - ייתכן שהטיקר "
+            f"לא פעיל/לא מתעדכן ב-Yahoo"
+        )
     start_pairs = [p for p in pairs if p[0] <= end_date]
     if not start_pairs:
         start_pairs = pairs
-    start_val = min(start_pairs, key=lambda p: abs((p[0] - start_date).days))[1]
-    end_val = min(pairs, key=lambda p: abs((p[0] - end_date).days))[1]
+    start_date_matched, start_val = min(start_pairs, key=lambda p: abs((p[0] - start_date).days))
+    end_date_matched, end_val = min(pairs, key=lambda p: abs((p[0] - end_date).days))
+    if start_date_matched == end_date_matched:
+        return None, None, (
+            f"נקודת ההתחלה והסוף שנמצאו הן אותו יום מסחר בדיוק ({start_date_matched}) "
+            f"מתוך {len(pairs)} נקודות בטווח - נתוני הטיקר ב-Yahoo כנראה דלילים מדי "
+            f"לחישוב שינוי שבועי אמין"
+        )
     return start_val, end_val, None
 
 
@@ -134,13 +152,30 @@ def fetch_yahoo_latest(ticker, as_of_date, scale=1.0):
 
 
 
-def build_indices_section(start_date, end_date, log):
+def build_indices_section(start_date, end_date, log, banks_override=None):
+    """
+    banks_override: dict אופציונלי {"pct": ..., "as_of": "YYYY-MM-DD"} -
+    נשלף מקומית מביזפורטל (ראה fetch_pe.fetch_index_weekly_change),
+    כי ל-Yahoo יש נתונים דלילים מדי לטיקר TA-BANKS.TA (ראה fetch_yahoo_range
+    ותיעוד 19/09/2026) - אם Yahoo נכשל דווקא ל'ת"א בנקים' ויש override
+    זמין, משתמשים בו במקום להציג שגיאה.
+    """
+    footnotes = []
     rows = []
     for name, ticker in YAHOO_INDICES:
         start_val, end_val, err = fetch_yahoo_range(ticker, start_date, end_date)
         if err:
-            log(f"  ⚠️  {name} ({ticker}): {err}")
-            rows.append([name, None, None, f"שגיאת שליפה: {err}"])
+            if name == 'ת"א בנקים' and banks_override and banks_override.get("pct") is not None:
+                rows.append([name, None, None, banks_override["pct"]])
+                note = (
+                    f"'ת\"א בנקים': ל-Yahoo אין נתונים אמינים לטיקר {ticker} ({err}) - "
+                    f"נעשה שימוש בשינוי השבועי מביזפורטל (נשלף מקומית, נכון ל-{banks_override.get('as_of', '?')})."
+                )
+                log(f"  ℹ️  {note}")
+                footnotes.append(note)
+            else:
+                log(f"  ⚠️  {name} ({ticker}): {err}")
+                rows.append([name, None, None, f"שגיאת שליפה: {err}"])
         else:
             pct = (end_val - start_val) / start_val
             rows.append([name, round(start_val, 2), round(end_val, 2), pct])
@@ -151,7 +186,7 @@ def build_indices_section(start_date, end_date, log):
                     f"ערך סוף שבוע ({end_date.day}.{end_date.month})", "שינוי שבועי"],
         "percent_cols": [3],
         "rows": rows,
-        "footnotes": [],
+        "footnotes": footnotes,
     }
 
 
@@ -360,6 +395,10 @@ def main():
     ap.add_argument("--cpi-israel", default=None, help='ערך מדד המחירים לצרכן ישראל (למשל "+0.3%% חודשי") - ידני')
     ap.add_argument("--cpi-israel-note", default=None, help="הערה נלווית למדד הישראלי - ידני")
     ap.add_argument("--macro-file", default=None, help="נתיב לקובץ JSON עם פריטי מאקרו נוספים - ידני, ראה weekly_macro_example.json")
+    ap.add_argument("--banks-index-override", default=None,
+                     help='נתיב לקובץ JSON {"pct":.., "as_of":..} עם השינוי השבועי של \'ת"א בנקים\' '
+                          "שנשלף מקומית מביזפורטל (ראה fetch_pe.fetch_index_weekly_change) - "
+                          "משמש רק אם Yahoo נכשל לספק נתון אמין לטיקר הזה")
     args = ap.parse_args()
 
     start_date = datetime.strptime(args.start_date, "%Y-%m-%d").date()
@@ -368,8 +407,16 @@ def main():
     def log(msg):
         print(msg)
 
+    banks_override = None
+    if args.banks_index_override:
+        try:
+            with open(args.banks_index_override, encoding="utf-8") as f:
+                banks_override = json.load(f)
+        except (OSError, json.JSONDecodeError) as e:
+            log(f"  ⚠️  לא ניתן לקרוא את {args.banks_index_override}: {e} - ימשיך בלי override ל'ת\"א בנקים'.")
+
     print("שולף מדדי מניות (Yahoo Finance)...")
-    sections = [build_indices_section(start_date, end_date, log)]
+    sections = [build_indices_section(start_date, end_date, log, banks_override=banks_override)]
     print("שולף מטבעות וסחורות (Yahoo Finance)...")
     sections.append(build_currencies_section(start_date, end_date, log))
     print("שולף תשואות אג\"ח (Yahoo Finance) וריבית הפד (NY Fed API)...")

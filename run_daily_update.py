@@ -11,7 +11,10 @@ Scheduler, שרת לינוקס, GitHub Actions, או אפילו Termux בטלפ�
 *** לפני הרצה ראשונה: לערוך את הגדרות ה-CONFIG למטה ***
 
 דרישות התקנה (חד פעמי):
-    pip install requests openpyxl python-dateutil scipy tzdata
+    pip install requests openpyxl python-dateutil tzdata
+    (scipy כבר לא נדרש - bond_math.py עבר למימוש brentq טהור-פייתון,
+    כדי לא להיות תלוי ב-C extension שיכול להיחסם ע"י Application
+    Control/Smart App Control של Windows - ראה ההערה בראש bond_math.py)
 
 קבצים נדרשים באותה תיקייה:
     bond_math.py, recompute_metrics.py, build_dashboard.py
@@ -28,7 +31,21 @@ import pathlib
 import re
 import subprocess
 import sys
+import time
 from zoneinfo import ZoneInfo
+
+# כש-stdout של התהליך הזה לא מחובר לקונסולה אמיתית (Task Scheduler בלי
+# חלון, או - כמו שקרה בפועל ב-07/09/2026 - כשההורה (run_daily_local.py)
+# מריץ אותנו עם capture_output=True, שהופך את ה-stdout שלנו ל-pipe),
+# פייתון בוחר קידוד ברירת מחדל לפי locale המערכת (cp1252 ב-Windows),
+# ו-print() עברית קורס עם UnicodeEncodeError - קרה בפועל, הפיל את כל
+# הריצה עוד לפני שנכתבה שורת לוג ראשונה (log() קורא ל-print() תמיד,
+# לא רק כותב לקובץ). מתקנים את זה כאן, בדיוק כמו ב-run_daily_local.py.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 
 import requests
 import openpyxl
@@ -375,11 +392,28 @@ def stamp_last_updated(dashboard_path: pathlib.Path, log_file):
     log(f"✅ נוספה חותמת 'עודכן לאחרונה: {stamp}' לדשבורד.", log_file)
 
 
+def _open_log_with_retry(path, attempts=5, delay_seconds=2.0):
+    """פותח את קובץ הלוג להוספה (append), עם ניסיונות חוזרים אם הקובץ
+    נעול זמנית (למשל אנטי-וירוס/OneDrive/ריצה קודמת שעדיין לא שחררה
+    את הקובץ). בלי זה, PermissionError חד-פעמי בפתיחת הלוג מפיל את
+    כל הריצה עוד לפני שנכתבת שורה אחת - וקרה בפועל (ראה run_log.txt).
+    """
+    last_error = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return open(path, "a", encoding="utf-8")
+        except (PermissionError, OSError) as e:
+            last_error = e
+            if attempt < attempts:
+                time.sleep(delay_seconds)
+    raise last_error
+
+
 def main():
     xlsx_path = pathlib.Path(XLSX_PATH)
     dashboard_path = pathlib.Path(DASHBOARD_PATH)
 
-    with open(LOG_PATH, "a", encoding="utf-8") as log_file:
+    with _open_log_with_retry(LOG_PATH) as log_file:
         log_file.write("\n" + "=" * 60 + "\n")
         log("--- תחילת ריצה ---", log_file)
 

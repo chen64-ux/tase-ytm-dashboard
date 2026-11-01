@@ -22,6 +22,8 @@ jobs:
       - name: Install dependencies
         run: pip install requests openpyxl python-dateutil scipy tzdata
       - name: Run weekly review update
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python run_weekly_review.py
       - name: Commit and push changes
         run: |

@@ -1,0 +1,96 @@
+name: TA125 Daily Collect (after close)
+
+# איסוף יומי של נתוני המניות אחרי סגירת המסחר (אחרי 19:00 שעון ישראל).
+# GitHub cron הוא ב-UTC ואינו מכיר שעון קיץ, לכן יש 3 הרצות:
+#   16:20 UTC = 19:20 קיץ (UTC+3) / 18:20 חורף (UTC+2 - הסקריפט ידלג, מוקדם מדי)
+#   17:20 UTC = 20:20 קיץ / 19:20 חורף
+#   18:20 UTC = 21:20 קיץ / 20:20 חורף (ניסיון חוזר אם הבורסה איחרה לעדכן)
+# הסקריפט עצמו בודק שעה בישראל (>=19) ושתאריך הקובץ = היום, ואידמפוטנטי -
+# ריצות מיותרות מסתיימות בדילוג ירוק.
+# שבת/ימים ללא מסחר: הקובץ נכון לתאריך קודם -> דילוג אוטומטי.
+# איסוף יומי של נתוני המניות אחרי סגירת המסחר (אחרי 19:00 שעון ישראל), במקביל להרצה המקומית
+# (Windows Task Scheduler - run_ta125_local.py). שתיהן אידמפוטנטיות: מי שרץ שנייה מוצא "כבר נשמר".
+# GitHub cron הוא ב-UTC ואינו מכיר שעון קיץ ועלול להתעכב; האוסף עצמו בודק שעה ותאריך:
+#   16:20 UTC = 19:20 קיץ / 18:20 חורף (הסקריפט ידלג, מוקדם מדי); 17:20; 18:20 = ניסיון חוזר.
+on:
+  schedule:
+    - cron: "20 16 * * 1-5"
+    - cron: "20 17 * * 1-5"
+    - cron: "20 18 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "עקוף בדיקת שעה/תאריך (בדיקות בלבד)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: ta125-daily-collect
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests tzdata openpyxl python-dateutil scipy
+
+      - name: Collect
+        run: |
+          if [ "${{ github.event.inputs.force }}" = "true" ]; then
+            python collect_ta125_daily.py --force
+          else
+            python collect_ta125_daily.py
+          fi
+
+      - name: Commit data
+        run: |
+          git config user.name "tase-bot"
+          git config user.email "tase-bot@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "אין שינוי בנתונים."
+            exit 0
+          fi
+          git commit -m "TA125 daily snapshot $(date -u +%F)"
+          for i in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" && git push && exit 0
+            sleep 5
+          done
+          echo "push נכשל" && exit 1
+
+      # סעיפים 7-8 (ת"א-125, 7 ימים מתגלגל). סעיף 9 (סקטורי ארה"ב) מתעדכן ב-us-sectors-daily.yml ב-05:00.
+      # בדשבורד, מתעדכנת כל יום מסחר. לא קריטי: כשל כאן לא מבטל את שמירת הנתונים למעלה.
+      - name: Update dashboard (rolling 7 days)
+        continue-on-error: true
+        run: |
+          # אם ה-push נדחה (ריצה מקומית/אחרת דחפה קודם): מבטלים רק את ה-commit ואת שני הקבצים שנוצרו,
+          # מושכים את הגרסה העדכנית ומייצרים מחדש (במקום למזג קבצים שנוצרו אוטומטית).
+          for attempt in 1 2 3; do
+            git pull --rebase origin "${GITHUB_REF_NAME}" || { git rebase --abort; exit 1; }
+            python compute_ta125_weekly.py --merge-into weekly_review.json
+            python build_dashboard.py ytm_computed.xlsx \
+              --template docs/ytm_dashboard.html --out docs/ytm_dashboard.html \
+              --weekly-review weekly_review.json
+            git add weekly_review.json docs/ytm_dashboard.html
+            if git diff --cached --quiet; then
+              echo "אין שינוי בדשבורד."
+              exit 0
+            fi
+            git commit -m "TA125 rolling 7-day update $(date -u +%F)"
+            git push && exit 0
+            echo "push נדחה (ניסיון $attempt) - מייצר מחדש על הגרסה העדכנית..."
+            git reset --mixed HEAD~1
+            git checkout -- weekly_review.json docs/ytm_dashboard.html
+          done
+          echo "push נכשל" && exit 1

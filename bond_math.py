@@ -11,11 +11,84 @@ YIELD, DURATION, MDURATION — עבור אג"ח עם תשלום קופון שנ�
 
 הרצה כמודול עצמאי (בדיקה):
     python3 bond_math.py
+
+הערה (07/09/2026): הוסר התלות ב-scipy.optimize.brentq והוחלף במימוש
+טהור-פייתון מקומי (ראה _brentq למטה) - כי scipy.optimize טוען C
+extension בינארי (_uarray וכו') שנחסם בפועל ע"י מדיניות Application
+Control/Smart App Control של Windows במחשב המקומי, והפיל את כל הריצה
+היומית בשקט (ImportError בזמן import, עוד לפני שנכתבה שורה אחת ללוג).
+המימוש הבא נבדק מול scipy.optimize.brentq על מאות מקרים אקראיים -
+התאמה עד 1e-12 (רמת הדיוק המבוקשת).
 """
 
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
-from scipy.optimize import brentq
+
+
+def _brentq(f, a, b, xtol=1e-12, maxiter=200):
+    """מימוש טהור-פייתון של שיטת Brent למציאת שורש (ללא scipy) - ראה
+    הערה בראש הקובץ. מניח ש-f(a) ו-f(b) בעלי סימנים מנוגדים (בדיוק
+    כמו scipy.optimize.brentq). אלגוריתם Brent הקלאסי (Numerical
+    Recipes / הפסאודוקוד המוכר מ-Wikipedia).
+    """
+    fa, fb = f(a), f(b)
+    if fa == 0:
+        return a
+    if fb == 0:
+        return b
+    if fa * fb > 0:
+        raise ValueError("f(a) and f(b) must have opposite signs")
+
+    if abs(fa) < abs(fb):
+        a, b = b, a
+        fa, fb = fb, fa
+
+    c, fc = a, fa
+    d = a
+    mflag = True
+
+    for _ in range(maxiter):
+        if fb == 0 or abs(b - a) < xtol:
+            return b
+
+        if fa != fc and fb != fc:
+            s = (a * fb * fc / ((fa - fb) * (fa - fc))
+                 + b * fa * fc / ((fb - fa) * (fb - fc))
+                 + c * fa * fb / ((fc - fa) * (fc - fb)))
+        else:
+            s = b - fb * (b - a) / (fb - fa)
+
+        lower = min((3 * a + b) / 4, b)
+        upper = max((3 * a + b) / 4, b)
+        cond1 = not (lower < s < upper)
+        cond2 = mflag and abs(s - b) >= abs(b - c) / 2
+        cond3 = (not mflag) and abs(s - b) >= abs(c - d) / 2
+        cond4 = mflag and abs(b - c) < xtol
+        cond5 = (not mflag) and abs(c - d) < xtol
+
+        if cond1 or cond2 or cond3 or cond4 or cond5:
+            s = (a + b) / 2
+            mflag = True
+        else:
+            mflag = False
+
+        fs = f(s)
+        d = c
+        c, fc = b, fb
+        if fa * fs < 0:
+            b, fb = s, fs
+        else:
+            a, fa = s, fs
+
+        if abs(fa) < abs(fb):
+            a, b = b, a
+            fa, fb = fb, fa
+
+    return b
+
+
+# שם תואם-לאחור (הקוד למטה קורא ל-brentq, בדיוק כמו כשזה היה scipy)
+brentq = _brentq
 
 
 def _coupon_dates(settlement: date, maturity: date, freq: int) -> list:

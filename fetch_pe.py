@@ -118,6 +118,50 @@ def fetch_pe_and_sector(sec_id: str):
     return {"pe": pe, "sector": sector, "error": "; ".join(errors) or None}
 
 
+def fetch_index_weekly_change(index_id: str, log_func=print):
+    """
+    שולפת את "השינוי השבועי" המוצג ישירות בעמוד המדד בביזפורטל (למשל
+    https://www.bizportal.co.il/capitalmarket/indices/generalview/751
+    למדד ת"א בנקים) - ביזפורטל כבר מחשב את זה בעצמו, כך שאין צורך
+    להשוות מחירים בין שני תאריכים כמו שעושים ל-Yahoo.
+
+    נוסף 19/09/2026: Yahoo Finance מחזיר נתונים דלילים מדי (לפעמים
+    נקודת מחיר בודדת בכל השבוע) לטיקר TA-BANKS.TA, מה שגרם ל"שינוי
+    שבועי" מוטעה של 0%. ביזפורטל חסום מ-GitHub Actions (כמו בנק
+    ישראל/למ"ס) - לכן זה מיועד לרוץ מהמחשב המקומי (run_daily_local.py)
+    ולהיכתב לקובץ שנקרא בהמשך ע"י fetch_weekly_review.py בענן.
+
+    מחזיר (pct, error): pct הוא שבר (0.0028 = 0.28%), לא אחוז גולמי -
+    כדי להתאים לפורמט של שאר המדדים בסעיף (percent_cols). error הוא
+    None בהצלחה.
+    """
+    url = f"https://www.bizportal.co.il/capitalmarket/indices/generalview/{index_id}"
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=15)
+    except requests.RequestException as e:
+        return None, f"שגיאת רשת: {e}"
+
+    if resp.status_code != 200:
+        return None, f"status={resp.status_code}"
+
+    text = resp.text
+    idx = text.find("שבועי")
+    if idx == -1:
+        return None, "התווית 'שבועי' לא נמצאה בעמוד"
+
+    window = text[idx:idx + 200]
+    clean = re.sub(r"<[^>]+>", " ", window)
+    clean = re.sub(r"&[a-zA-Z#0-9]+;", " ", clean)
+    clean = clean.replace("שבועי", "", 1)
+
+    m = re.search(r"(-?\d+(?:\.\d+)?)\s*%", clean)
+    if not m:
+        return None, "לא נמצא ערך אחוז אחרי התווית 'שבועי'"
+
+    pct = float(m.group(1)) / 100.0
+    return pct, None
+
+
 def fetch_pe_for_securities(sec_ids, log_func=print):
     """
     sec_ids: רשימת מספרי ני"ע (מחרוזות).
@@ -141,7 +185,12 @@ def fetch_pe_for_securities(sec_ids, log_func=print):
 
 if __name__ == "__main__":
     import sys
-    ids = sys.argv[1:] or ["126011"]
-    r = fetch_pe_for_securities(ids)
-    for sid, v in r.items():
-        print(sid, "->", v)
+    if "--index" in sys.argv:
+        index_id = sys.argv[sys.argv.index("--index") + 1]
+        pct, err = fetch_index_weekly_change(index_id)
+        print(f"index {index_id} -> pct={pct}, error={err}")
+    else:
+        ids = sys.argv[1:] or ["126011"]
+        r = fetch_pe_for_securities(ids)
+        for sid, v in r.items():
+            print(sid, "->", v)
