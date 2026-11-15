@@ -69,6 +69,9 @@ td.id{color:#3d4f63;font-size:.75rem;font-family:monospace}
 td.num{text-align:left;direction:ltr;font-variant-numeric:tabular-nums}
 .null{color:#2d3a4a}
 .pos{color:#3fb950}
+.wk-row-click{cursor:pointer}
+.wk-row-click:hover td,.wk-row-click:focus td{background:#0f1a2b}
+.wk-row-click:focus{outline:1px solid #58a6ff}
 .neg{color:#f85149}
 .warn{color:#d29922}
 .badge{display:inline-block;padding:2px 7px;border-radius:9px;font-size:.7rem;font-weight:600}
@@ -2498,19 +2501,27 @@ function renderWeeklyReview() {
     html += `</div>`;
   }
 
-  WEEKLY_REVIEW_DATA.sections.forEach(section => {
+  WEEKLY_REVIEW_DATA.sections.forEach((section, secIdx) => {
     html += `<div style="margin-bottom:28px">`;
     html += `<h3 style="color:#58a6ff;font-size:1rem;margin:0 0 10px">${section.title}</h3>`;
     if (section.headers && section.headers.length) {
+      const members = section.row_members || null;
       html += `<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse">`;
       html += `<thead><tr>` + section.headers.map(h =>
         `<th style="text-align:right;padding:8px 10px;background:#0d1420;color:#8b9ab0;font-size:.75rem;border-bottom:1px solid #1e2a3a;white-space:nowrap">${h}</th>`).join('') + `</tr></thead>`;
-      html += `<tbody>` + section.rows.map(row => `<tr>` +
-        section.headers.map((_, i) => {
+      html += `<tbody>` + section.rows.map((row, rowIdx) => {
+        const isTotal = members && row[0] === 'סה"כ';
+        const clickable = members && !isTotal && members[row[0]];
+        const trAttr = clickable
+          ? ` class="wk-row-click" data-sec="${secIdx}" data-row="${rowIdx}" tabindex="0" role="button" title="לחץ להצגת החברות בענף"`
+          : '';
+        const totalStyle = isTotal ? 'font-weight:700;border-top:2px solid #1e2a3a;' : '';
+        return `<tr${trAttr}>` + section.headers.map((_, i) => {
           const isPct = section.percent_cols && section.percent_cols.includes(i);
           const cellVal = formatWeeklyCell(row[i], isPct);
-          return `<td style="padding:8px 10px;color:#cdd6e4;font-size:.8rem;border-bottom:1px solid #161d2b">${cellVal || nil()}</td>`;
-        }).join('') + `</tr>`).join('') + `</tbody></table></div>`;
+          return `<td style="padding:8px 10px;color:#cdd6e4;font-size:.8rem;border-bottom:1px solid #161d2b;${totalStyle}">${cellVal || nil()}</td>`;
+        }).join('') + `</tr>`;
+      }).join('') + `</tbody></table></div>`;
     }
     if (section.footnotes && section.footnotes.length) {
       html += section.footnotes.map(f =>
@@ -2520,6 +2531,59 @@ function renderWeeklyReview() {
   });
 
   container.innerHTML = html;
+  container.querySelectorAll('tr.wk-row-click').forEach(tr => {
+    const open = () => showSectorMembers(+tr.dataset.sec, +tr.dataset.row);
+    tr.addEventListener('click', open);
+    tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+  });
+}
+
+// ===== פופ-אפ: החברות המרכיבות ענף (סעיף "ת"א 125 - סיכום לפי ענף") =====
+function closeSectorMembers() {
+  const ov = document.getElementById('sector-members-overlay');
+  if (ov) ov.remove();
+  document.removeEventListener('keydown', sectorMembersEsc);
+}
+function sectorMembersEsc(e) { if (e.key === 'Escape') closeSectorMembers(); }
+function escHtml(t) {
+  return String(t).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+}
+function showSectorMembers(secIdx, rowIdx) {
+  const section = WEEKLY_REVIEW_DATA.sections[secIdx];
+  if (!section || !section.row_members) return;
+  const sector = section.rows[rowIdx][0];
+  const list = section.row_members[sector] || [];
+  closeSectorMembers();
+  const pctCell = v => {
+    if (v == null) return nil();
+    const pct = v * 100;
+    return `<bdi dir="ltr" class="${pct >= 0 ? 'pos' : 'neg'}">${(pct >= 0 ? '+' : '') + pct.toFixed(2)}%</bdi>`;
+  };
+  const th = 'text-align:right;padding:7px 10px;background:#0d1420;color:#8b9ab0;font-size:.75rem;border-bottom:1px solid #1e2a3a;position:sticky;top:0';
+  const td = 'padding:7px 10px;color:#cdd6e4;font-size:.8rem;border-bottom:1px solid #161d2b';
+  const rowsHtml = list.map(m =>
+    `<tr><td style="${td}">${escHtml(m[0])}</td><td style="${td}">${pctCell(m[1])}</td><td style="${td}">${pctCell(m[2])}</td></tr>`).join('');
+  const ov = document.createElement('div');
+  ov.id = 'sector-members-overlay';
+  ov.setAttribute('dir', 'rtl');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:700;display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.innerHTML = `
+    <div role="dialog" aria-modal="true" style="background:#111826;border:1px solid #1e2a3a;border-radius:10px;width:min(560px,100%);max-height:80vh;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.5)">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid #1e2a3a">
+        <div style="color:#e6edf3;font-weight:600;font-size:1rem">${escHtml(sector)} <span style="color:#8b9ab0;font-weight:400;font-size:.8rem">- ${list.length} חברות</span></div>
+        <button type="button" id="sector-members-close" aria-label="סגירה" style="background:none;border:none;color:#8b9ab0;font-size:1.3rem;cursor:pointer;line-height:1">&times;</button>
+      </div>
+      <div style="overflow:auto">
+        <table style="width:100%;min-width:0;margin-top:0;border-collapse:collapse">
+          <thead><tr><th style="${th}">חברה</th><th style="${th}">תשואה שבועית</th><th style="${th}">תרומה למדד</th></tr></thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+      </div>
+    </div>`;
+  ov.addEventListener('click', e => { if (e.target === ov) closeSectorMembers(); });
+  document.body.appendChild(ov);
+  document.getElementById('sector-members-close').addEventListener('click', closeSectorMembers);
+  document.addEventListener('keydown', sectorMembersEsc);
 }
 renderWeeklyReview();
 

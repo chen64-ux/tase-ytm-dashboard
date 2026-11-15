@@ -228,16 +228,21 @@ def build_sections(stocks, proxy, bench, bench_label, weight_src, win_dates, n_p
     for s in ok:
         by_sec[s["sector"]].append(s)
     srows = []
+    row_members = {}
     for sec, lst in by_sec.items():
         w = sum(x["w0"] for x in lst)
         ret = sum(x["w0"] * x["R"] for x in lst) / w if w else sum(x["R"] for x in lst) / len(lst)
         up = sum(1 for x in lst if x["R"] > 0)
         down = sum(1 for x in lst if x["R"] < 0)
         srows.append([sec, ret, sum(x["contrib"] for x in lst), len(lst), up, down, up / len(lst)])
+        # החברות המרכיבות את הענף (לפופ-אפ בדשבורד): [שם, תשואה שבועית, תרומה למדד], מהעולה ליורדת
+        row_members[sec] = [[x["name"], x["R"], x["contrib"]] for x in sorted(lst, key=lambda x: x["R"], reverse=True)]
     srows.sort(key=lambda r: r[1], reverse=True)
+    # שורת סיכום אחרונה: סכום כמות החברות בכל הענפים (עמודת "מניות")
+    srows.append(['סה"כ', None, None, sum(r[3] for r in srows), None, None, None])
     sec2 = {"title": f"{SECTOR_TITLE} (7 ימים עד {last:%d.%m.%Y})",
             "headers": ["ענף", "תשואה (משוקללת)", "תרומה למדד", "מניות", "עלו", "ירדו", "רוחב (% שעלו)"],
-            "percent_cols": [1, 2, 6], "rows": srows,
+            "percent_cols": [1, 2, 6], "rows": srows, "row_members": row_members,
             "footnotes": ["תשואת ענף = ממוצע משוקלל במשקלי תחילת שבוע של מניות הענף.",
                           f"מניות ללא נתון תשואה נשמטו: {sum(1 for s in stocks if s['R'] is None)}."]}
     return [sec1, sec2]
