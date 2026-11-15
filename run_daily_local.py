@@ -162,7 +162,7 @@ GITATTRIBUTES_LINES = [
 # העיקרי), אלא רשת ביטחון עצמאית שלא תלויה בגיט בכלל. .git עצמו לא
 # מגובה כאן (הוא כבר מגובה דרך GitHub, וסנכרון OneDrive על תיקיית
 # .git פעילה עלול להתנגש עם כתיבות git ולגרום לשחיתות).
-ONEDRIVE_BACKUP_DIR = pathlib.Path(r"C:\Users\chen\OneDrive\tase-ytm-dashboard-backup")
+ONEDRIVE_BACKUP_DIR = pathlib.Path(r"C:\Users\micha\OneDrive\tase-ytm-dashboard-backup")
 ONEDRIVE_BACKUP_EXCLUDE_DIRS = [".git", "__pycache__", "downloads"]
 
 # עותק ה-holdings.xlsx בתיקיית הגיבוי ב-OneDrive - מאז 01/11/2026 הוא
